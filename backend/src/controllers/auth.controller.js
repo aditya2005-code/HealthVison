@@ -1,6 +1,5 @@
-import { User } from "../models/user.model";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { User } from "../models/user.model.js";
+import { generateToken } from "../utils/generateToken.js";
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -8,6 +7,7 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       password,
+      role, // Added role
       phone,
       dateOfBirth,
       gender,
@@ -47,12 +47,13 @@ export const registerUser = async (req, res, next) => {
       return res.status(409).json({ message: "User already exists." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Password hashing is now handled by the User model's pre-save middleware
 
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password, // Plain text password passed to model; model hashes it.
+      role, // Pass role
       phone,
       dateOfBirth,
       gender,
@@ -67,9 +68,7 @@ export const registerUser = async (req, res, next) => {
       insurance,
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = generateToken(user._id);
 
     return res.status(201).json({
       message: "User registered successfully.",
@@ -78,6 +77,7 @@ export const registerUser = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role, // Return role
         phone: user.phone,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
