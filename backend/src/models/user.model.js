@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema({
     },
     last: {
       type: String,
-      required: true,
       trim: true
     }
   },
@@ -75,7 +74,7 @@ const userSchema = new mongoose.Schema({
     patientId: {
       type: String,
       unique: true,
-      required: true
+      sparse: true
     },
     admissionDate: {
       type: Date,
