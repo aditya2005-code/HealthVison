@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-
+import authRoutes from './routes/auth.routes';
 dotenv.config();
 
 const app = express();
@@ -23,7 +23,7 @@ mongoose.connect(MONGO_URI)
 app.get('/', (req, res) => {
   res.send('HealthVision API is running');
 });
-
+app.use('/api/auth',authRoutes);
 // Server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
