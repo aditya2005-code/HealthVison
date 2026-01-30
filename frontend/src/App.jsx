@@ -4,6 +4,7 @@ import AuthLayout from './layouts/AuthLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -14,9 +15,11 @@ function App() {
           <Route path="/signup" element={<Signup />} />
         </Route>
 
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="*" element={<div className="p-4">404 Not Found</div>} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="*" element={<div className="p-4">404 Not Found</div>} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
