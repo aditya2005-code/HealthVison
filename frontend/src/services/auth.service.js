@@ -28,7 +28,13 @@ const login = async (email, password) => {
             password,
         });
         if (response.data.token) {
-            localStorage.setItem('user', JSON.stringify(response.data));
+            // Flatten the structure: { token, ...userProfile }
+            const userData = {
+                token: response.data.token,
+                ...response.data.user
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
+            return userData;
         }
         return response.data;
     } catch (error) {
@@ -40,7 +46,12 @@ const register = async (userData) => {
     try {
         const response = await api.post('/auth/register', userData);
         if (response.data.token) {
-            localStorage.setItem('user', JSON.stringify(response.data));
+            const userDataToSave = {
+                token: response.data.token,
+                ...response.data.user
+            };
+            localStorage.setItem('user', JSON.stringify(userDataToSave));
+            return userDataToSave;
         }
         return response.data;
     } catch (error) {
