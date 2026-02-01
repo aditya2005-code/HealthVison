@@ -44,6 +44,7 @@ export default function Header() {
                     </>
                 ) : (
                     <>
+                        <Link to="/doctors" className="px-4 py-2 text-gray-600 hover:text-blue-600 font-medium">Find Doctors</Link>
                         <Link to="/login" className="px-4 py-2 text-gray-600 hover:text-blue-600">Login</Link>
                         <Link to="/signup" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Signup</Link>
                     </>

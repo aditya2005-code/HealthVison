@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicLayout from './layouts/PublicLayout';
+import DoctorsList from './pages/Doctors/DoctorsList';
+import DoctorDetail from './pages/Doctors/DoctorDetail';
 
 function App() {
   return (
@@ -15,6 +18,11 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+        </Route>
+
+        <Route element={<PublicLayout />}>
+          <Route path="/doctors" element={<DoctorsList />} />
+          <Route path="/doctors/:id" element={<DoctorDetail />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
