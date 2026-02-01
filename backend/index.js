@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import authRoutes from './src/routes/auth.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import doctorRoutes from './src/routes/doctor.routes.js';
+import appointmentRoutes from './src/routes/appointment.routes.js';
 dotenv.config();
 
 const app = express();
@@ -33,6 +34,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/doctors', doctorRoutes);
+app.use('/api/appointments', appointmentRoutes);
 // Server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
