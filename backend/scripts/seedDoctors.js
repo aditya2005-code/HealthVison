@@ -4,6 +4,19 @@ import { Doctor } from "../src/models/doctor.model.js";
 
 dotenv.config();
 
+const hospitals = [
+    "Vatsalya Hospital, Kanpur",
+    "Regency Hospital, Kanpur",
+    "Fortune Hospital, Kanpur",
+    "The Panacea Hospital, Kanpur",
+    "Apollo Spectra Hospitals, Kanpur",
+    "Merrygold Hospital, Kanpur",
+    "The Gastro-Liver Hospital, Kanpur",
+    "Mahendru Hospital, Kanpur",
+    "Madhuraj Hospital, Kanpur",
+    "Kulwanti Hospital, Kanpur"
+];
+
 const doctors = [
     {
         name: "Dr. Abhay Tripathi",
@@ -12,6 +25,12 @@ const doctors = [
         rating: 4.9,
         availability: ["Mon-Fri 10:00 AM - 02:00 PM", "Sat 10:00 AM - 01:00 PM"],
         fee: 1500,
+        about: "Dr. Abhay Tripathi is a renowned Cardiologist with over 15 years of experience. He specializes in interventional cardiology and has performed numerous successful angioplasties. He is dedicated to patient care and preventive cardiology.",
+        qualifications: "MBBS, MD (General Medicine), DM (Cardiology)",
+        location: hospitals[1], // Regency
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-12345 (UPMC)",
+        contact: "+91 98765 43210"
     },
     {
         name: "Dr. Gaurav Gupta",
@@ -20,6 +39,12 @@ const doctors = [
         rating: 4.7,
         availability: ["Mon-Sat 11:00 AM - 04:00 PM"],
         fee: 800,
+        about: "Dr. Gaurav Gupta is a skilled Dermatologist known for his expertise in treating acne, psoriasis, and other skin conditions. He also offers cosmetic dermatology services.",
+        qualifications: "MBBS, MD (Dermatology)",
+        location: hospitals[4], // Apollo Spectra
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-67890 (UPMC)",
+        contact: "+91 98765 11111"
     },
     {
         name: "Dr. Isha Tripathi",
@@ -28,6 +53,12 @@ const doctors = [
         rating: 4.8,
         availability: ["Mon-Fri 09:00 AM - 01:00 PM", "Mon-Fri 05:00 PM - 08:00 PM"],
         fee: 1000,
+        about: "Dr. Isha Tripathi is a compassionate Dentist with a focus on painless dentistry. She has extensive experience in root canal treatments, crowns, and bridges.",
+        qualifications: "BDS, MDS (Prosthodontics)",
+        location: hospitals[0], // Vatsalya
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-54321 (UPMC)",
+        contact: "+91 98765 22222"
     },
     {
         name: "Dr. Sadhna Yadav",
@@ -36,6 +67,12 @@ const doctors = [
         rating: 4.9,
         availability: ["Mon-Sat 10:30 AM - 02:30 PM"],
         fee: 1200,
+        about: "Dr. Sadhna Yadav is a trusted Gynecologist and Obstetrician. She specializes in high-risk pregnancies and laparoscopic surgeries.",
+        qualifications: "MBBS, MS (Obstetrics & Gynecology)",
+        location: hospitals[5], // Merrygold
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-98765 (UPMC)",
+        contact: "+91 98765 33333"
     },
     {
         name: "Dr. Amit Sharma",
@@ -44,6 +81,12 @@ const doctors = [
         rating: 4.6,
         availability: ["Tue-Sun 10:00 AM - 02:00 PM"],
         fee: 2000,
+        about: "Dr. Amit Sharma is a senior Orthopedic Surgeon with 20 years of experience. He specializes in joint replacement and trauma surgeries.",
+        qualifications: "MBBS, MS (Orthopedics)",
+        location: hospitals[3], // Panacea
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-11223 (UPMC)",
+        contact: "+91 98765 44444"
     },
     {
         name: "Dr. Rohit Saxena",
@@ -52,6 +95,12 @@ const doctors = [
         rating: 4.5,
         availability: ["Mon-Sat 09:00 AM - 09:00 PM"],
         fee: 500,
+        about: "Dr. Rohit Saxena is a dedicated General Physician treating a wide range of acute and chronic illnesses. He emphasizes holistic well-being.",
+        qualifications: "MBBS, MD (Internal Medicine)",
+        location: hospitals[2], // Fortune
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-33445 (UPMC)",
+        contact: "+91 98765 55555"
     }
 ];
 

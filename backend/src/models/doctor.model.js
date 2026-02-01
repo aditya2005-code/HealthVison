@@ -27,6 +27,35 @@ const doctorSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
+        about: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        qualifications: {
+            type: String, // e.g., "MBBS, MD"
+            required: true,
+            trim: true,
+        },
+        location: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        languages: {
+            type: [String],
+            default: ["English", "Hindi"],
+        },
+        registration: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        contact: {
+            type: String, // Store phone number as string
+            required: true,
+            trim: true,
+        },
         fee: {
             type: Number,
             required: true,
