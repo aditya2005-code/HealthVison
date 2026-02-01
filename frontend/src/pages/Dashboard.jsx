@@ -1,10 +1,11 @@
 import React from 'react';
 import { Activity, Calendar, FileText, MessageSquare, Search, PlusCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth.service';
-import StatCard from '../components/Dashboard/StatCard';
 import StatCard from '../components/Dashboard/StatCard';
 
 export default function Dashboard() {
+    const navigate = useNavigate();
     const user = authService.getCurrentUser();
 
     // Placeholder data (in a real app, this would come from an API)
@@ -44,7 +45,10 @@ export default function Dashboard() {
                     <div>
                         <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 cursor-pointer hover:shadow-md transition-all group">
+                            <div
+                                onClick={() => navigate('/doctors')}
+                                className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 cursor-pointer hover:shadow-md transition-all group"
+                            >
                                 <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                     <Search className="w-6 h-6 text-blue-600" />
                                 </div>
