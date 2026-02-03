@@ -101,6 +101,34 @@ const doctors = [
         languages: ["English", "Hindi"],
         registration: "Reg. No. UP-33445 (UPMC)",
         contact: "+91 98765 55555"
+    },
+    {
+        name: "Dr. Anshul Atre",
+        specialization: "Neuro Surgeon",
+        experience: 18,
+        rating: 4.9,
+        availability: ["Mon-Fri 10:00 AM - 04:00 PM"],
+        fee: 2500,
+        about: "Dr. Anshul Atre is a distinguished Neuro Surgeon with expertise in complex brain and spine surgeries. He is known for his precision and patient-centric approach.",
+        qualifications: "MBBS, MS (Surgery), MCh (Neurosurgery)",
+        location: hospitals[2], // Fortune Hospital
+        languages: ["English", "Hindi"],
+        registration: "Reg. No. UP-99887 (UPMC)",
+        contact: "+91 98765 67890"
+    },
+    {
+        name: "Dr. Satyasundara Mahapatra",
+        specialization: "Dermatologist",
+        experience: 12,
+        rating: 4.8,
+        availability: ["Mon-Sat 11:00 AM - 03:00 PM"],
+        fee: 900,
+        about: "Dr. Satyasundara Mahapatra provides comprehensive care for skin, hair, and nail conditions. He specializes in both clinical and aesthetic dermatology.",
+        qualifications: "MBBS, MD (Dermatology)",
+        location: hospitals[8], // Madhuraj Hospital
+        languages: ["English", "Hindi", "Odia"],
+        registration: "Reg. No. UP-77665 (UPMC)",
+        contact: "+91 98765 13579"
     }
 ];
 

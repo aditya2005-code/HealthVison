@@ -17,13 +17,16 @@ const Login = () => {
 
     const validate = () => {
         const newErrors = {};
-        if (!formData.email) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Email is invalid';
+        const email = formData.email.trim();
+        const password = formData.password.trim();
+
+        if (!email) {
+            newErrors.email = 'Please enter your email address';
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Please enter a valid email address';
         }
-        if (!formData.password) {
-            newErrors.password = 'Password is required';
+        if (!password) {
+            newErrors.password = 'Please enter your password';
         }
         return newErrors;
     };
@@ -94,7 +97,7 @@ const Login = () => {
                         id="email"
                         label="Email address"
                         type="email"
-                        placeholder="user@domain.com"
+                        placeholder="name@example.com"
                         value={formData.email}
                         onChange={handleChange}
                         error={errors.email}
@@ -104,7 +107,7 @@ const Login = () => {
                         id="password"
                         label="Password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="********"
+                        placeholder="Enter your password"
                         value={formData.password}
                         onChange={handleChange}
                         error={errors.password}
@@ -154,6 +157,7 @@ const Login = () => {
                             type="submit"
                             className="w-full flex justify-center py-2 px-4 shadow-sm text-sm font-medium"
                             isLoading={isLoading}
+                            disabled={isLoading}
                         >
                             Sign in
                         </Button>
