@@ -67,11 +67,31 @@ const getCurrentUser = () => {
     return JSON.parse(localStorage.getItem('user'));
 };
 
+const forgotPassword = async (email) => {
+    try {
+        const response = await api.post('/auth/forgot-password', { email });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : { message: 'Network Error' };
+    }
+};
+
+const resetPassword = async (token, password) => {
+    try {
+        const response = await api.post(`/auth/reset-password/${token}`, { password });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : { message: 'Network Error' };
+    }
+};
+
 const authService = {
     login,
     register,
     logout,
     getCurrentUser,
+    forgotPassword,
+    resetPassword,
 };
 
 export default authService;
