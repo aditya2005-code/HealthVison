@@ -20,20 +20,25 @@ const Signup = () => {
 
     const validate = () => {
         const newErrors = {};
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
+        const name = formData.name.trim();
+        const email = formData.email.trim();
+        const password = formData.password.trim();
+        const confirmPassword = formData.confirmPassword.trim();
+
+        if (!name) {
+            newErrors.name = 'Please enter your full name';
         }
-        if (!formData.email) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Email is invalid';
+        if (!email) {
+            newErrors.email = 'Please enter your email address';
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Please enter a valid email address';
         }
-        if (!formData.password) {
-            newErrors.password = 'Password is required';
-        } else if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+        if (!password) {
+            newErrors.password = 'Please enter a password';
+        } else if (password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters long';
         }
-        if (formData.password !== formData.confirmPassword) {
+        if (password !== confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
         return newErrors;
@@ -133,7 +138,7 @@ const Signup = () => {
                         id="name"
                         label="Full Name"
                         type="text"
-                        placeholder="Rishi Tiwari"
+                        placeholder="e.g., Rishi Tiwari"
                         value={formData.name}
                         onChange={handleChange}
                         error={errors.name}
@@ -143,7 +148,7 @@ const Signup = () => {
                         id="email"
                         label="Email address"
                         type="email"
-                        placeholder="user@domain.com"
+                        placeholder="name@example.com"
                         value={formData.email}
                         onChange={handleChange}
                         error={errors.email}
@@ -153,7 +158,7 @@ const Signup = () => {
                         id="password"
                         label="Password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="********"
+                        placeholder="Create a password"
                         value={formData.password}
                         onChange={handleChange}
                         error={errors.password}
@@ -165,7 +170,7 @@ const Signup = () => {
                         id="confirmPassword"
                         label="Confirm Password"
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="********"
+                        placeholder="Confirm your password"
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         error={errors.confirmPassword}
@@ -177,6 +182,7 @@ const Signup = () => {
                             type="submit"
                             className="w-full flex justify-center py-2 px-4 shadow-sm text-sm font-medium"
                             isLoading={isLoading}
+                            disabled={isLoading}
                         >
                             Sign up
                         </Button>

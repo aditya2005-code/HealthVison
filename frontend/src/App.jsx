@@ -5,6 +5,8 @@ import AuthLayout from './layouts/AuthLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './layouts/PublicLayout';
 import DoctorsList from './pages/Doctors/DoctorsList';
@@ -18,6 +20,8 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Route>
 
         <Route element={<PublicLayout />}>
@@ -35,5 +39,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
+// commented and pushed code just to create a new pull request and merge it with main
 export default App;
