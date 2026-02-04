@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './layouts/PublicLayout';
 import DoctorsList from './pages/Doctors/DoctorsList';
 import DoctorDetail from './pages/Doctors/DoctorDetail';
+import ReportUpload from './pages/ReportUpload';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
+            <Route path="reports/upload" element={<ReportUpload />} />
             <Route path="*" element={<div className="p-4">404 Not Found</div>} />
           </Route>
         </Route>

@@ -56,7 +56,10 @@ export default function Dashboard() {
                                 <p className="text-sm text-gray-600">Search for specialists near you</p>
                             </div>
 
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 cursor-pointer hover:shadow-md transition-all group">
+                            <div
+                                onClick={() => navigate('/reports/upload')}
+                                className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 cursor-pointer hover:shadow-md transition-all group"
+                            >
                                 <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                     <FileText className="w-6 h-6 text-green-600" />
                                 </div>
