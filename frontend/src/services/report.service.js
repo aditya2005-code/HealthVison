@@ -93,11 +93,26 @@ const deleteReport = async (id) => {
     }
 };
 
+/**
+ * Analyze a report using ML API
+ * @param {string} reportId - Report ID to analyze
+ * @returns {Promise} - Analysis results
+ */
+const analyzeReport = async (reportId) => {
+    try {
+        const response = await api.post('/reports/analyze', { reportId });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : { message: 'Network Error' };
+    }
+};
+
 const reportService = {
     uploadReport,
     getUserReports,
     getReportById,
     deleteReport,
+    analyzeReport,
 };
 
 export default reportService;
