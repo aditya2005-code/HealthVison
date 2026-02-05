@@ -3,7 +3,8 @@ import {
     uploadReport,
     getUserReports,
     getReportById,
-    deleteReport
+    deleteReport,
+    analyzeReport
 } from '../controllers/report.controller.js';
 import { VerifyJWT } from '../middleware/user.middleware.js';
 import upload from '../middleware/upload.middleware.js';
@@ -37,7 +38,6 @@ const router = express.Router();
  *         description: Unauthorized
  */
 router.post('/upload', VerifyJWT, upload.single('file'), uploadReport);
-
 /**
  * @swagger
  * /reports:
@@ -101,5 +101,39 @@ router.get('/:id', VerifyJWT, getReportById);
  *         description: Unauthorized
  */
 router.delete('/:id', VerifyJWT, deleteReport);
+
+/**
+ * @swagger
+ * /reports/analyze:
+ *   post:
+ *     summary: Analyze a medical report using ML API
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reportId
+ *             properties:
+ *               reportId:
+ *                 type: string
+ *                 description: ID of the report to analyze
+ *     responses:
+ *       200:
+ *         description: Report analyzed successfully
+ *       400:
+ *         description: Report ID is required
+ *       404:
+ *         description: Report not found
+ *       503:
+ *         description: ML API unavailable
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/analyze', VerifyJWT, analyzeReport);
 
 export default router;
