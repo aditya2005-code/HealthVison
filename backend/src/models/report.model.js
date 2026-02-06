@@ -40,6 +40,9 @@ const reportSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add index for dashboard stats optimization
+reportSchema.index({ userId: 1 });
+
 const Report = mongoose.model('Report', reportSchema);
 
 export default Report;
