@@ -1,26 +1,34 @@
 import { Appointment } from "../models/appointment.models.js";
 import Report from "../models/report.model.js";
 
-export const getstats = async (req, res) => {
+export const getStats = async (req, res) => {
     try {
         const userId = req.user.id;
-        const [appointmentStats, reportCount] = await Promise.all([
+
+        const [appointmentStats, reportCount, consultationCount] = await Promise.all([
+            // Aggregate appointments stats
             Appointment.aggregate([
-                { $match: { user: userId } },
-                { $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } }
-                }}
+                { $match: { userId: userId } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        pending: { $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] } }
+                    }
+                }
             ]),
-            Report.countDocuments({ user: userId }),
+            // Count reports
+            Report.countDocuments({ userId: userId }),
+            // Count consultations (Completed appointments)
+            Appointment.countDocuments({ userId: userId, status: "Completed" })
         ]);
 
         res.status(200).json({
             success: true,
             data: {
                 appointments: appointmentStats[0] || { total: 0, pending: 0 },
-                reports: reportCount
+                reports: reportCount,
+                consultations: consultationCount
             }
         });
     } catch (error) {

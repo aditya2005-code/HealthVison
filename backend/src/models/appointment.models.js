@@ -33,4 +33,7 @@ const appointmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Add indexes for dashboard stats optimization
+appointmentSchema.index({ userId: 1, status: 1 });
+
 export const Appointment = mongoose.model("Appointment", appointmentSchema);

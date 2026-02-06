@@ -10,6 +10,7 @@ import userRoutes from './src/routes/user.routes.js';
 import doctorRoutes from './src/routes/doctor.routes.js';
 import appointmentRoutes from './src/routes/appointment.routes.js';
 import reportRoutes from './src/routes/report.routes.js';
+import dashboardRoutes from './src/routes/dashboard.routes.js';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
