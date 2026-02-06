@@ -1,8 +1,12 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { Doctor } from "../src/models/doctor.model.js";
+import { fileURLToPath } from "url";
+import path from "path";
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const hospitals = [
     "Vatsalya Hospital, Kanpur",

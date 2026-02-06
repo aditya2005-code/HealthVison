@@ -63,7 +63,6 @@ export const getUserReports = async (req, res) => {
         res.status(500).json({ message: 'Error fetching reports', error: error.message });
     }
 };
-
 /**
  * Get a specific report by ID
  * GET /api/reports/:id
@@ -222,3 +221,16 @@ export const analyzeReport = async (req, res) => {
         });
     }
 };
+//Count the number of reports for dashboard
+export const countReports = async (req,res)=>{
+    try {
+        const reports=await Report.find({userId: req.user.id})
+           .sort({ createdAt: -1 })
+            .select('-__v');
+        res.status(200).json({
+            count:reports.length
+        }) 
+    } catch (error) {
+        res.status(500).json({message:'Error fetching reports',error:error.message});
+    }
+}
