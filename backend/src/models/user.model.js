@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -23,6 +25,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     select: false
+  },
+  role: {
+    type: String,
+    enum: ["patient", "doctor", "admin"],
+    default: "patient"
   },
   phone: {
     type: String,
@@ -110,9 +117,36 @@ const userSchema = new mongoose.Schema({
     provider: String,
     policyNumber: String,
     validTill: Date
-  }
+  },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date
 }, {
   timestamps: true
 });
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+userSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.getResetPasswordToken = function () {
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set expire time (e.g., 10 minutes)
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
 
 export const User = mongoose.model("User", userSchema);
