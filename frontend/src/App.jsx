@@ -14,6 +14,7 @@ import DoctorDetail from './pages/Doctors/DoctorDetail';
 import ReportUpload from './pages/ReportUpload';
 import Reports from './pages/Reports';
 import ReportAnalysis from './pages/ReportAnalysis';
+import Chatbot from './pages/Chatbot';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route path="reports/upload" element={<ReportUpload />} />
             <Route path="reports" element={<Reports />} />
             <Route path="reports/:id" element={<ReportAnalysis />} />
+            <Route path="chat" element={<Chatbot />} />
             <Route path="*" element={<div className="p-4">404 Not Found</div>} />
           </Route>
         </Route>
