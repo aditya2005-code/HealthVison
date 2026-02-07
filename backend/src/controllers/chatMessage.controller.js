@@ -136,7 +136,7 @@ export const deleteChatMessage = async (req, res) => {
     }
 };
 
-// Delete all chat history for a user
+// Delete all chat history for a User
 export const deleteChatHistory = async (req, res) => {
     try {
         const { userId } = req.params;
