@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function Sidebar() {
     return (
-        <aside className="w-64 bg-gray-50 h-[calc(100vh-64px)] p-4 border-r hidden md:block">
+        <aside className="w-64 bg-gray-50 h-full p-4 border-r hidden md:block">
             <nav className="flex flex-col space-y-2">
                 <Link to="/" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Dashboard</Link>
                 <Link to="/doctors" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Find Doctors</Link>
