@@ -1,6 +1,7 @@
 import Report from '../models/report.model.js';
 import fs from 'fs';
 import path from 'path';
+import mongoose from 'mongoose';
 import { analyzeReport as analyzeReportML } from '../services/ml.service.js';
 
 /**
@@ -50,17 +51,48 @@ export const uploadReport = async (req, res) => {
  */
 export const getUserReports = async (req, res) => {
     try {
-        const reports = await Report.find({ userId: req.user.id })
-            .sort({ createdAt: -1 })
-            .select('-__v');
+        // Pagination with validation
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+        const skip = (page - 1) * limit;
+
+        // Optional status filter
+        const query = { userId: req.user.id };
+        if (req.query.status && ['pending', 'processing', 'completed', 'failed'].includes(req.query.status)) {
+            query.status = req.query.status;
+        }
+
+        // Execute optimized query with pagination
+        const [reports, totalCount] = await Promise.all([
+            Report.find(query)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .select('-__v -extractedText') // Exclude large text field for list view
+                .lean(), // Use lean for better performance
+            Report.countDocuments(query)
+        ]);
+
+        const totalPages = Math.ceil(totalCount / limit);
 
         res.status(200).json({
             message: 'Reports retrieved successfully',
             count: reports.length,
-            reports
+            totalCount,
+            reports,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching reports', error: error.message });
+        console.error('Error fetching reports:', error);
+        res.status(500).json({ 
+            message: 'Error fetching reports', 
+            error: error.message 
+        });
     }
 };
 /**
@@ -69,13 +101,22 @@ export const getUserReports = async (req, res) => {
  */
 export const getReportById = async (req, res) => {
     try {
+        // Validate MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ 
+                message: 'Invalid report ID format' 
+            });
+        }
+
         const report = await Report.findOne({
             _id: req.params.id,
             userId: req.user.id
-        });
+        }).select('-__v').lean();
 
         if (!report) {
-            return res.status(404).json({ message: 'Report not found' });
+            return res.status(404).json({ 
+                message: 'Report not found or you do not have access to it' 
+            });
         }
 
         res.status(200).json({
@@ -83,7 +124,18 @@ export const getReportById = async (req, res) => {
             report
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching report', error: error.message });
+        console.error('Error fetching report:', error);
+        
+        if (error.name === 'CastError') {
+            return res.status(400).json({ 
+                message: 'Invalid report ID' 
+            });
+        }
+        
+        res.status(500).json({ 
+            message: 'Error fetching report', 
+            error: error.message 
+        });
     }
 };
 
@@ -93,26 +145,55 @@ export const getReportById = async (req, res) => {
  */
 export const deleteReport = async (req, res) => {
     try {
+        // Validate MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ 
+                message: 'Invalid report ID format' 
+            });
+        }
+
         const report = await Report.findOne({
             _id: req.params.id,
             userId: req.user.id
         });
 
         if (!report) {
-            return res.status(404).json({ message: 'Report not found' });
+            return res.status(404).json({ 
+                message: 'Report not found or you do not have access to it' 
+            });
         }
 
-        // Delete the file from filesystem
-        if (fs.existsSync(report.fileUrl)) {
-            fs.unlinkSync(report.fileUrl);
+        // Delete the file from filesystem with error handling
+        if (report.fileUrl) {
+            try {
+                if (fs.existsSync(report.fileUrl)) {
+                    fs.unlinkSync(report.fileUrl);
+                }
+            } catch (fileError) {
+                console.error('Error deleting file:', fileError);
+                // Continue with database deletion even if file deletion fails
+            }
         }
 
         // Delete from database
         await Report.deleteOne({ _id: req.params.id });
 
-        res.status(200).json({ message: 'Report deleted successfully' });
+        res.status(200).json({ 
+            message: 'Report deleted successfully' 
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting report', error: error.message });
+        console.error('Error deleting report:', error);
+        
+        if (error.name === 'CastError') {
+            return res.status(400).json({ 
+                message: 'Invalid report ID' 
+            });
+        }
+        
+        res.status(500).json({ 
+            message: 'Error deleting report', 
+            error: error.message 
+        });
     }
 };
 
@@ -221,16 +302,43 @@ export const analyzeReport = async (req, res) => {
         });
     }
 };
-//Count the number of reports for dashboard
-export const countReports = async (req,res)=>{
+/**
+ * Count the number of reports for dashboard
+ * GET /api/reports/count
+ */
+export const countReports = async (req, res) => {
     try {
-        const reports=await Report.find({userId: req.user.id})
-           .sort({ createdAt: -1 })
-            .select('-__v');
+        // Use countDocuments for better performance instead of fetching all documents
+        const totalCount = await Report.countDocuments({ userId: req.user.id });
+        
+        // Get counts by status for more detailed dashboard stats
+        const statusCounts = await Report.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]);
+
+        const countsByStatus = {
+            pending: 0,
+            processing: 0,
+            completed: 0,
+            failed: 0
+        };
+
+        statusCounts.forEach(item => {
+            countsByStatus[item._id] = item.count;
+        });
+
         res.status(200).json({
-            count:reports.length
-        }) 
+            success: true,
+            totalCount,
+            countsByStatus
+        });
     } catch (error) {
-        res.status(500).json({message:'Error fetching reports',error:error.message});
+        console.error('Error counting reports:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error fetching report counts', 
+            error: error.message 
+        });
     }
-}
+};
