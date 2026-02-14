@@ -3,6 +3,8 @@ import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Timeslot } from "../models/timeslot.model.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 export const createAppointment = asyncHandler(async (req, res) => {
     const { doctorId, date, time } = req.body;
@@ -17,14 +19,59 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Doctor not found");
     }
 
+    // Atomic check and update to prevent race conditions
+    const timeslot = await Timeslot.findOneAndUpdate(
+        {
+            doctorId,
+            date: new Date(date),
+            time,
+            status: "Available"
+        },
+        {
+            $set: { status: "Booked" }
+        },
+        { new: true }
+    );
+
+    if (!timeslot) {
+        throw new ApiError(409, "Selected timeslot is not available");
+    }
+
     const appointment = await Appointment.create({
         userId,
         doctorId,
         date,
-        time
+        time,
+        status: "Scheduled",
+        paymentStatus: "Pending"
     });
 
-    return res.status(201).json(new ApiResponse(200, appointment, "Appointment created successfully"));
+    // Send confirmation email (don't block response if fails)
+    try {
+        const user = await User.findById(userId);
+        const message = `
+            <h1>Appointment Confirmation</h1>
+            <p>Dear ${user.name.first},</p>
+            <p>Your appointment with Dr. ${doctor.name.first} ${doctor.name.last} has been scheduled.</p>
+            <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${time}</p>
+            <p>Status: Scheduled</p>
+            <br>
+            <p>Thank you for choosing HealthVision.</p>
+        `;
+
+        await sendEmail({
+            email: user.email,
+            subject: "Appointment Confirmation - HealthVision",
+            message: `Your appointment with Dr. ${doctor.name.first} on ${new Date(date).toLocaleDateString()} at ${time} is confirmed.`,
+            html: message
+        });
+    } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        // Continue execution, don't fail the request
+    }
+
+    return res.status(201).json(new ApiResponse(201, appointment, "Appointment created successfully"));
 });
 
 export const getAppointments = asyncHandler(async (req, res) => {
