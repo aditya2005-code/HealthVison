@@ -15,6 +15,8 @@ import ReportUpload from './pages/ReportUpload';
 import Reports from './pages/Reports';
 import ReportAnalysis from './pages/ReportAnalysis';
 import Chatbot from './pages/Chatbot';
+import AppointmentBooking from './pages/AppointmentBooking';
+import Appointments from './pages/Appointments';
 
 function App() {
   return (
@@ -40,6 +42,8 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="reports/:id" element={<ReportAnalysis />} />
             <Route path="chat" element={<Chatbot />} />
+            <Route path="appointments/book" element={<AppointmentBooking />} />
+            <Route path="appointments" element={<Appointments />} />
             <Route path="*" element={<div className="p-4">404 Not Found</div>} />
           </Route>
         </Route>

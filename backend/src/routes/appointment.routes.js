@@ -1,11 +1,12 @@
 import express from "express";
 import { VerifyJWT } from "../middleware/user.middleware.js";
-import { createAppointment, getAppointments, getAppointmentById, updateAppointment, deleteAppointment } from "../controllers/appointment.controller.js";
+import { createAppointment, getAppointments, getAppointmentById, updateAppointment, deleteAppointment, getTimeslotsForDoctor } from "../controllers/appointment.controller.js";
 
 const router = express.Router();
 
 router.post("/", VerifyJWT, createAppointment);
 router.get("/", VerifyJWT, getAppointments);
+router.get("/timeslots/:doctorId", VerifyJWT, getTimeslotsForDoctor);
 router.get("/:id", VerifyJWT, getAppointmentById);
 router.put("/:id", VerifyJWT, updateAppointment);
 router.delete("/:id", VerifyJWT, deleteAppointment);
