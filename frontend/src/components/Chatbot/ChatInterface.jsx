@@ -85,8 +85,8 @@ const ChatInterface = ({ messages, onSendMessage, loading }) => {
                                             setIsDropdownOpen(false);
                                         }}
                                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${urgency === level
-                                                ? 'bg-blue-50 text-blue-700 font-medium'
-                                                : 'text-gray-600 hover:bg-gray-50'
+                                            ? 'bg-blue-50 text-blue-700 font-medium'
+                                            : 'text-gray-600 hover:bg-gray-50'
                                             }`}
                                     >
                                         <span className={`w-2.5 h-2.5 rounded-full ${urgencyConfig[level].color}`} />
@@ -120,7 +120,7 @@ const ChatInterface = ({ messages, onSendMessage, loading }) => {
                                     ? 'bg-blue-600 text-white rounded-tr-none'
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm'
                                     }`}>
-                                    <p className="text-sm">{msg.text}</p>
+                                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                                 </div>
                                 <div className={`text-xs text-gray-400 mt-1 flex items-center ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
                                     <Clock className="w-3 h-3 mr-1" />

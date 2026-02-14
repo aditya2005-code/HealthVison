@@ -45,7 +45,7 @@ const Chatbot = () => {
                         });
                     }
                 });
-                setMessages(historyHelper);
+                setMessages(historyHelper.reverse());
             }
         } catch (error) {
             console.error("Error loading chat history:", error);

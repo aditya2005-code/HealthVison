@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Activity, AlertCircle } from 'lucide-react';
 import AnalysisResult from '../components/AnalysisResult';
+import ReportChatbot from '../components/Chatbot/ReportChatbot';
 import reportService from '../services/report.service';
 import toast from 'react-hot-toast';
 
@@ -177,6 +178,12 @@ const ReportAnalysis = () => {
                         Click the "Analyze Report" button above to get AI-powered insights and recommendations from your medical report.
                     </p>
                 </div>
+            )}
+
+
+            {/* Chatbot Overlay */}
+            {report && (
+                <ReportChatbot reportId={report._id} reportName={report.fileName} />
             )}
         </div>
     );

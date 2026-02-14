@@ -3,12 +3,17 @@ import authService from './auth.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-const sendMessage = async (message, urgency) => {
+const sendMessage = async (message, urgency, reportId = null, context = 'general') => {
     const user = authService.getCurrentUser();
     const token = user?.token;
 
+    const payload = { message, urgency, context };
+    if (reportId) {
+        payload.reportId = reportId;
+    }
+
     const response = await axios.post(`${API_URL}/chatbot/message`,
-        { message, urgency },
+        payload,
         {
             headers: {
                 Authorization: `Bearer ${token}`
