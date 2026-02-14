@@ -109,7 +109,7 @@ export default function Dashboard() {
                     <p className="text-gray-500 mt-1">Here's your health overview for today.</p>
                 </div>
                 <button
-                    onClick={() => navigate('/doctors')}
+                    onClick={() => navigate('/appointments/book')}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center transition-colors shadow-sm font-medium"
                 >
                     <PlusCircle className="w-5 h-5 mr-2" />
