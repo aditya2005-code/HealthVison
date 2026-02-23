@@ -50,4 +50,30 @@ const verifyPayment=async(req,res)=>{
         res.status(500).json({message:"Internal server error"});
     }
 }
-module.exports={createPayment,verifyPayment};
+const webhookController = async (req, res) => {
+  const signature = req.headers["x-razorpay-signature"];
+
+  const expectedSignature = require("crypto")
+    .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
+    .update(req.body)
+    .digest("hex");
+
+  if (signature !== expectedSignature) {
+    return res.status(400).send("Invalid webhook signature");
+  }
+
+  const event = JSON.parse(req.body);
+
+  if (event.event === "payment.captured") {
+
+    const orderId = event.payload.payment.entity.order_id;
+
+    await Payment.findOneAndUpdate(
+      { orderId },
+      { status: "paid" }
+    );
+  }
+
+  res.status(200).send("OK");
+};
+module.exports={createPayment,verifyPayment,webhookController};
