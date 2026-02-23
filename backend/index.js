@@ -12,6 +12,8 @@ import appointmentRoutes from './src/routes/appointment.routes.js';
 import reportRoutes from './src/routes/report.routes.js';
 import dashboardRoutes from './src/routes/dashboard.routes.js';
 import chatbotRoutes from './src/routes/chatbot.routes.js';
+import paymentRoutes from './src/routes/payment.routes.js';
+import { webhookController } from './src/controllers/payment.controller.js';
 
 dotenv.config();
 
@@ -49,6 +51,11 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.post(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" }),
+  webhookController
+);
 app.use('/api/payment', paymentRoutes);
 // 404 Handler - must be after all routes
 import { notFoundHandler } from './src/middleware/error.middleware.js';
