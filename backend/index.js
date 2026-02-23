@@ -49,7 +49,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chatbot', chatbotRoutes);
-
+app.use('/api/payment', paymentRoutes);
 // 404 Handler - must be after all routes
 import { notFoundHandler } from './src/middleware/error.middleware.js';
 app.use(notFoundHandler);
