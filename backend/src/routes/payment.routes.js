@@ -1,7 +1,11 @@
-const express=require("express");
-const router=express.Router();
-const {createPayment,verifyPayment}=require("../controllers/payment.controller.js");
-const {VerifyJWT}=require("../middleware/user.middleware.js");
-router.post("/create",VerifyJWT,createPayment);
-router.post("/verify",VerifyJWT,verifyPayment);
-module.exports=router;
+import express from "express";
+import { createPayment, verifyPayment, getPaymentHistory } from "../controllers/payment.controller.js";
+import { VerifyJWT } from "../middleware/user.middleware.js";
+
+const router = express.Router();
+
+router.post("/create", VerifyJWT, createPayment);
+router.post("/verify", VerifyJWT, verifyPayment);
+router.get("/history", VerifyJWT, getPaymentHistory);
+
+export default router;
