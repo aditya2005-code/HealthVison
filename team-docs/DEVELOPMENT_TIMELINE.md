@@ -13,8 +13,8 @@
 |-------|----------|------------|
 | **Phase 1: Foundation & Setup** | Days 1-7 | Project setup, authentication, database design |
 | **Phase 2: Core Features I** | Days 8-14 | Public pages, dashboard, report analysis foundation |
-| **Phase 3: Core Features II** | Days 15-21 | Appointments, payments, symptom chatbot |
-| **Phase 4: Integration & Polish** | Days 22-28 | WebRTC, testing, bug fixes, deployment prep |
+| **Phase 3: Core Features II** | Days 15-17 | Appointments, symptom chatbot (Paused at Day 17) |
+| **Phase 4: Project Wrap-Up**| Days 18-25 | Payments, WebRTC, final testing, deployment |
 
 ---
 
@@ -276,7 +276,7 @@
 
 ---
 
-## 💳 Phase 3: Core Features II (Days 15-21)
+## 💳 Phase 3: Core Features II (Days 15-17)
 
 ### Day 15
 **Frontend:**
@@ -318,11 +318,11 @@
 **Frontend:**
 - Design payment integration UI
 - Add payment form component
-- Integrate Razorpay/Stripe SDK
+- Integrate Razorpay SDK
 - Create payment success/failure pages
 
 **Backend + DB:**
-- Setup payment gateway (Razorpay/Stripe test mode)
+- Setup payment gateway (Razorpay test mode)
 - Design Payment schema (appointmentId, amount, status, transactionId)
 - Implement payment initiation endpoint
 - Create payment webhook handler
@@ -332,177 +332,131 @@
 - Test chatbot edge cases
 - Prepare ML documentation
 
-### Day 18
+---
+
+> **🚨 Note: Project Pause (End of Day 17)**
+> 
+> Due to overwhelming college schedules (9:00 AM - 7:30 PM elite batch classes), nearly 2 hours of daily commute, and concurrent college fests, the progress halted at this point. 
+> 
+> **Status at Pause:**
+> - **Frontend:** Completed up to Day 16 (Payment UI design is still pending).
+> - **Backend & DB:** Completed up to Day 17.
+> - **AI/ML:** Jupyter notebooks for Data Preprocessing, OCR, and multiple Disease Prediction models are completed, and `.pkl` model files are generated. However, Flask/FastAPI server setup, API endpoints, and the symptom chatbot are pending.
+
+---
+
+## 🏁 Phase 4: Project Wrap-Up (Days 18-25)
+
+### Day 18: Payments Integration & ML Verification
 **Frontend:**
-- Complete payment flow integration
-- Add payment status tracking
-- Implement payment history display
-- Test payment flow end-to-end
+- Complete Day 17 backlog: Design payment integration UI
+- Add payment form component (Razorpay SDK)
+- Create payment success/failure pages
 
 **Backend + DB:**
-- Complete payment webhook implementation
+- Complete payment webhook implementation (catch-up/extend Day 17)
 - Update appointment status after payment
 - Implement GET /api/payments/history
-- Add payment verification logic
 
 **AI/ML:**
-- Finalize all ML models
-- Create ML API documentation
-- Test all ML endpoints
+- Setup ML API project structure (Flask/FastAPI)
+- Port model inference code from notebooks to Python scripts in `utils`
+- Prepare environment and dependencies (requirements.txt)
 
-### Day 19
+### Day 19: Appointment Management
 **Frontend:**
-- Create appointment management page
-- Add appointment cancellation feature
+- Create appointment management page & cancellation feature
 - Implement appointment rescheduling UI
 - Add appointment status indicators
 
 **Backend + DB:**
 - Implement appointment cancellation (PUT /api/appointments/:id/cancel)
-- Add rescheduling logic
-- Update timeslot availability on cancellation
+- Add rescheduling logic & update timeslot availability
 - Implement refund logic (if applicable)
 
 **AI/ML:**
-- Performance optimization
-- Add ML model versioning
-- Create backup/rollback procedures
+- Create inference API endpoints for Disease Predictions (`/predict`)
+- Write unit tests for the prediction endpoints locally
+- Document API expected request/response formats
 
-### Day 20
+### Day 20: WebRTC Setup & Video UI
 **Frontend:**
-- Polish all booking and payment flows
-- Add loading states and error handling
-- Test complete user journey
-- Fix UI/UX issues
-
-**Backend + DB:**
-- Add comprehensive error handling
-- Implement logging system
-- Add input sanitization
-- Security audit
-
-**AI/ML:**
-- Final ML model testing
-- Create ML performance metrics
-- Document model limitations
-
-### Day 21
-**All Roles:**
-- Code review Phase 3 features
-- Integration testing
-- Bug fixes
-- Prepare for final phase
-
----
-
-## 🎥 Phase 4: Integration & Polish (Days 22-28)
-
-### Day 22
-**Frontend:**
-- Research WebRTC libraries (Simple-peer, Socket.io-client)
+- Research/Setup WebRTC libraries (Simple-peer, Socket.io-client)
 - Design video consultation page UI
 - Create video call interface components
-- Add call controls (mute, video toggle, end call)
 
 **Backend + DB:**
 - Setup Socket.io server
-- Design Consultation schema (appointmentId, roomId, startTime, endTime, status)
+- Design Consultation schema (appointmentId, roomId, startTime)
 - Implement WebRTC signaling endpoints
-- Create room management system
 
 **AI/ML:**
-- Finalize ML documentation
-- Create ML API health check endpoint
-- Prepare ML deployment guide
+- Implement OCR API (`/extract-text`) integrating pytesseract/PyMuPDF
+- Test OCR text extraction with sample medical reports
+- Link OCR output parsing directly to disease models if required
 
-### Day 23
+### Day 21: WebRTC Integration Complete
 **Frontend:**
-- Implement WebRTC connection logic
-- Add peer connection handling
-- Create signaling client
-- Test basic video call functionality
+- Implement WebRTC connection logic & peer handling
+- Add basic call controls (mute, video toggle, end call)
+- Test end-to-end video consultation
 
 **Backend + DB:**
 - Complete WebRTC signaling server
-- Implement room creation/joining
-- Add user presence tracking
-- Test signaling flow
+- Implement room creation/joining & presence tracking
+- Add consultation history endpoints
 
 **AI/ML:**
-- Deploy ML API to server/cloud
-- Test ML API in production environment
-- Monitor ML API performance
+- Research and implement Symptom Chatbot logic (NLP or rule-based)
+- Create Chatbot API endpoint (`/chatbot/message`)
+- Map symptoms to urgency classification levels
 
-### Day 24
+### Day 22: UX Polish & Error Handling
 **Frontend:**
-- Complete WebRTC integration
-- Add call quality indicators
-- Implement call history
-- Polish video call UI
+- Polish booking, payment flows, and video UI
+- Add universal loading skeletons and error states
+- Fix minor UI/UX inconsistencies
 
 **Backend + DB:**
-- Complete consultation endpoints
-- Add call recording structure (for future)
-- Implement consultation history
-- Test complete consultation flow
+- Add comprehensive error handling & input sanitization
+- Implement application-wide logging system
+- Security audit of endpoints
 
 **AI/ML:**
-- Monitor ML API in production
-- Fix any performance issues
-- Update documentation
+- Coordinate with Backend/Frontend to integrate ML APIs
+- Test end-to-end data flow (Upload -> OCR -> ML API -> Backend)
+- Implement fallback/error responses for API timeouts and invalid inputs
 
-### Day 25
-**Frontend:**
-- End-to-end testing of all features
-- Fix UI bugs and inconsistencies
-- Optimize performance
-- Add loading skeletons
-
-**Backend + DB:**
-- Comprehensive API testing
-- Performance optimization
-- Database indexing
-- Security hardening
-
-**AI/ML:**
-- Final ML model validation
-- Performance benchmarking
-- Create ML monitoring dashboard (optional)
-
-### Day 26
+### Day 23: Cross-Device & Load Testing
 **Frontend:**
 - Responsive design testing (mobile, tablet, desktop)
-- Cross-browser compatibility testing
+- Cross-browser compatibility checks
 - Accessibility improvements
-- Final UI polish
 
 **Backend + DB:**
-- Load testing
-- Database optimization
-- API response time optimization
-- Backup and recovery setup
+- Run API load testing
+- Add necessary database indexing for fast queries
+- Setup data backup and recovery routines
 
 **AI/ML:**
-- ML model accuracy validation
-- Create ML usage analytics
-- Final documentation
+- Add request logging and build ML monitoring basics
+- Benchmark ML model performance and API response times under load
+- Thoroughly test chatbot edge cases with varied symptom inputs
 
-### Day 27
+### Day 24: End-to-End Integration Testing
 **All Roles:**
-- Complete integration testing
-- Fix critical bugs
-- Security review
-- Performance optimization
-- Prepare deployment
+- Unified integration testing across auth, payments, appointments, and ML
+- Fix critical bugs identified
+- Final security review on data handling
+- Database and API response time optimization (specifically for OCR and Model inference)
 
-### Day 28
+### Day 25: Deployment & Handover
 **All Roles:**
-- Final code review
-- Merge all feature branches to main
-- Deployment to staging environment
-- Demo preparation
-- Documentation finalization
-- Project handover
+- Final code review & merge all feature branches to main
+- Deployment to production/staging environment (Render/AWS for Backend/ML, Vercel/Netlify for Frontend)
+- Ensure SSL, environment variables, and domains configured
+- Demo preparation for mentors/professors
+- Documentation finalization & Project handover
 
 ---
 
