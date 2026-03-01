@@ -5,6 +5,8 @@ import DoctorSelection from '../components/Appointment/DoctorSelection';
 import TimeslotSelection from '../components/Appointment/TimeslotSelection';
 import BookingConfirmation from '../components/Appointment/BookingConfirmation';
 import appointmentService from '../services/appointment.service';
+import paymentService from '../services/payment.service';
+import authService from '../services/auth.service';
 import toast from 'react-hot-toast';
 
 const AppointmentBooking = () => {
@@ -31,16 +33,71 @@ const AppointmentBooking = () => {
                 doctorId: selectedDoctor._id,
                 date: selectedSlot.date,
                 time: selectedSlot.time,
-                doctorName: selectedDoctor.name, // optional, useful for UI optimistically
-                status: 'confirmed' // initial status
+                doctorName: selectedDoctor.name,
+                status: 'confirmed'
             };
 
-            await appointmentService.bookAppointment(bookingData);
-            toast.success('Appointment booked successfully!');
-            navigate('/appointments'); // Redirect to appointments list
+            // 1. Create Appointment
+            const appointmentRes = await appointmentService.bookAppointment(bookingData);
+            const appointmentId = appointmentRes.data?._id;
+
+            if (!appointmentId) {
+                throw new Error("Failed to retrieve appointment ID");
+            }
+
+            // 2. Initiate Payment (Create Order on Backend)
+            const fee = selectedDoctor.fee || selectedDoctor.fees || 500;
+            const paymentRes = await paymentService.createPayment(fee, appointmentId);
+            const order = paymentRes.order;
+
+            // 3. Open Razorpay Checkout Modal
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_mock_key", // Fallback for dev if not set
+                amount: order.amount,
+                currency: order.currency,
+                name: "HealthVision",
+                description: `Consultation with Dr. ${selectedDoctor.name}`,
+                order_id: order.id,
+                handler: async function (response) {
+                    try {
+                        // 4. Verify Payment on Backend
+                        toast.loading('Verifying payment...', { id: 'payment-verify' });
+                        await paymentService.verifyPayment({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        toast.success('Payment successful & Appointment confirmed!', { id: 'payment-verify' });
+                        navigate('/payment/success');
+                    } catch (error) {
+                        toast.error(error.response?.data?.message || 'Payment verification failed', { id: 'payment-verify' });
+                        console.error("Payment Verification Error:", error);
+                        navigate('/payment/failure');
+                    }
+                },
+                prefill: {
+                    name: authService.getCurrentUser()?.name || authService.getCurrentUser()?.name?.first || "Patient",
+                    email: authService.getCurrentUser()?.email || "patient@example.com",
+                    contact: authService.getCurrentUser()?.phone || "9999999999"
+                },
+                theme: {
+                    color: "#2563eb"
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+
+            rzp.on('payment.failed', function (response) {
+                toast.error(`Payment Failed: ${response.error.description || 'An error occurred'}`);
+                console.error("Payment Failed:", response.error);
+                navigate('/payment/failure');
+            });
+
+            rzp.open();
+
         } catch (error) {
-            console.error('Booking failed:', error);
-            toast.error(error.response?.data?.message || 'Failed to book appointment');
+            console.error('Booking/Payment failed:', error);
+            toast.error(error.response?.data?.message || error.message || 'Failed to book appointment');
         } finally {
             setLoading(false);
         }

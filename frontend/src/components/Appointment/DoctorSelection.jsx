@@ -61,8 +61,8 @@ const DoctorSelection = ({ onSelect, selectedDoctorId }) => {
                     key={doctor._id}
                     onClick={() => onSelect(doctor)}
                     className={`cursor-pointer border rounded-xl p-4 transition-all duration-200 hover:shadow-md ${selectedDoctorId === doctor._id
-                            ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-600 ring-offset-2'
-                            : 'border-gray-200 bg-white hover:border-blue-300'
+                        ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-600 ring-offset-2'
+                        : 'border-gray-200 bg-white hover:border-blue-300'
                         }`}
                 >
                     <div className="flex items-start gap-4">
@@ -91,7 +91,7 @@ const DoctorSelection = ({ onSelect, selectedDoctorId }) => {
                             </div>
 
                             <div className="mt-3 flex justify-between items-center">
-                                <span className="font-bold text-gray-900">₹{doctor.fees || 500}</span>
+                                <span className="font-bold text-gray-900">₹{doctor.fee || doctor.fees || 500}</span>
                                 <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Available</span>
                             </div>
                         </div>
