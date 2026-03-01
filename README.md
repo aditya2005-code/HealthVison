@@ -142,11 +142,12 @@ python main.py
 - Timeslot management
 - Appointment confirmation
 
-### 5. Payment Integration
-- Secure payment gateway (Razorpay/Stripe)
-- 20% advance payment for consultations
-- Payment history tracking
-
+### 5. Payment Integration (Razorpay)
+- **Secure Processing**: Integrated Razorpay Checkout JS for seamless frontend payments.
+- **Order Generation**: Express backend securely generates Order IDs and authenticates transactions.
+- **Signature Verification**: Server-side webhook and crypto HMAC signature validation.
+- **User Experience**: Automatic sync with database state for instantly confirmed appointment statuses.
+- **Consultation Fee**: Dynamic pricing retrieved from database models.
 ### 6. Video Consultation
 - WebRTC-based real-time communication
 - Voice and video calls
@@ -158,6 +159,15 @@ python main.py
 - **Code Review**: Pull requests required for merging
 - **Testing**: Continuous testing throughout development
 - **Communication**: Daily standups and async updates
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. "Report Not Found" at `/reports/analysis`
+If you see a "Report Not Found" error when visiting `http://localhost:5173/reports/analysis`, this is expected behavior.
+- **Cause**: The URL `/reports/analysis` tries to load a report with the ID "analysis", which does not exist.
+- **Solution**: Use the correct URL format: `/reports/:reportId` (e.g., `/reports/65d4...`). You can navigate to specific reports from the **Reports** page or **Dashboard**.
 
 ## 📄 License
 
