@@ -215,3 +215,18 @@ export const getTimeslotsForDoctor = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, timeslotData, "Timeslots fetched successfully"));
 });
+export const cancelAppointment=asyncHandler(req,res)=>{
+    const appointmentId=req.query();
+    const appointment=await Appointment.findById(appointmentId);
+    if(!appointment){
+        throw new ApiError(404,"Appointment not found");
+    }
+    if(appointment.userId._id.toString()!==req.user.id){
+        throw new ApiError(403,"Unauthorized to cancel this appointment");
+    }
+    if(appointment.paymentStatus==="Paid"){
+        console.log("Payment will be transferred to your HealthVision Wallet");
+    }
+    await Appointment.findByIdAndDelete(appointmentId);
+    return res.status(200).json(new ApiResponse(200,{},"Appointment cancelled successfully"));
+}

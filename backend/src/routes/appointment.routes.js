@@ -10,4 +10,5 @@ router.get("/timeslots/:doctorId", VerifyJWT, getTimeslotsForDoctor);
 router.get("/:id", VerifyJWT, getAppointmentById);
 router.put("/:id", VerifyJWT, updateAppointment);
 router.delete("/:id", VerifyJWT, deleteAppointment);
+router.put('/:id/cancel',VerifyJWT,)
 export default router;
