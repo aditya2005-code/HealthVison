@@ -77,7 +77,7 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading }) => {
                             </div>
                             <div>
                                 <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Consultation Fee</p>
-                                <p className="font-bold text-gray-900">₹{doctor.fees || 500}</p>
+                                <p className="font-bold text-gray-900">₹{doctor.fee || doctor.fees || 500}</p>
                             </div>
                         </div>
                     </div>
@@ -92,10 +92,10 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading }) => {
                         {loading ? (
                             <>
                                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                                Confirming...
+                                Processing...
                             </>
                         ) : (
-                            'Confirm Appointment'
+                            'Confirm & Pay'
                         )}
                     </button>
                     <p className="text-center text-xs text-gray-400">

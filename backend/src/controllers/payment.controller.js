@@ -48,7 +48,10 @@ export const createPayment = async (req, res) => {
         return res.status(200).json({ order });
     } catch (error) {
         console.error("Error creating payment:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(error.statusCode || 500).json({
+            message: error.error?.description || "Internal server error",
+            error: error.error
+        });
     }
 };
 
@@ -57,6 +60,7 @@ export const verifyPayment = async (req, res) => {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
         const isValid = verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+
         if (!isValid) {
             return res.status(400).json({ message: "Invalid payment signature" });
         }
