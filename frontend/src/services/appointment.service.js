@@ -1,18 +1,7 @@
-import axios from 'axios';
-import authService from './auth.service';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import api from './api';
 
 const getAppointments = async () => {
-    const user = authService.getCurrentUser();
-    const token = user?.token;
-
-    const response = await axios.get(`${API_URL}/appointments`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-
+    const response = await api.get('/appointments');
     return response.data;
 };
 
@@ -20,29 +9,17 @@ const appointmentService = {
     getAppointments,
 
     getTimeslots: async (doctorId, date) => {
-        const user = authService.getCurrentUser();
-        const token = user?.token;
-        const response = await axios.get(`${API_URL}/appointments/timeslots/${doctorId}?date=${date}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get(`/appointments/timeslots/${doctorId}?date=${date}`);
         return response.data;
     },
 
     bookAppointment: async (bookingData) => {
-        const user = authService.getCurrentUser();
-        const token = user?.token;
-        const response = await axios.post(`${API_URL}/appointments`, bookingData, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.post('/appointments', bookingData);
         return response.data;
     },
 
     cancelAppointment: async (id) => {
-        const user = authService.getCurrentUser();
-        const token = user?.token;
-        const response = await axios.put(`${API_URL}/appointments/${id}/cancel`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.put(`/appointments/${id}/cancel`, {});
         return response.data;
     }
 };

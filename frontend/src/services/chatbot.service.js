@@ -1,39 +1,17 @@
-import axios from 'axios';
-import authService from './auth.service';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import api from './api';
 
 const sendMessage = async (message, urgency, reportId = null, context = 'general') => {
-    const user = authService.getCurrentUser();
-    const token = user?.token;
-
     const payload = { message, urgency, context };
     if (reportId) {
         payload.reportId = reportId;
     }
 
-    const response = await axios.post(`${API_URL}/chatbot/message`,
-        payload,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
+    const response = await api.post('/chatbot/message', payload);
     return response.data;
 };
 
 const getHistory = async () => {
-    const user = authService.getCurrentUser();
-    const token = user?.token;
-
-    const response = await axios.get(`${API_URL}/chatbot/history`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-
+    const response = await api.get('/chatbot/history');
     return response.data;
 };
 

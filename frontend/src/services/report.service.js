@@ -1,25 +1,4 @@
-import axios from 'axios';
-
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/reports';
-
-// Create axios instance with base URL
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-});
-
-// Add a request interceptor to add the auth token to headers
-api.interceptors.request.use(
-    (config) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user && user.token) {
-            config.headers.Authorization = `Bearer ${user.token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+import api from './api';
 
 /**
  * Upload a medical report file
