@@ -16,8 +16,17 @@ const Appointments = () => {
         try {
             setLoading(true);
             const response = await appointmentService.getAppointments();
-            // Backend returns { success: true, data: [...] } or just data depending on response structure
-            setAppointments(response.data || response);
+            const data = response.data || response;
+
+            // Sort chronologically (soonest first)
+            const sortedData = [...data].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                if (dateA - dateB !== 0) return dateA - dateB;
+                return a.time.localeCompare(b.time);
+            });
+
+            setAppointments(sortedData);
         } catch (err) {
             setError('Failed to load appointments');
             console.error(err);

@@ -3,6 +3,7 @@ import { Payment } from "../models/payment.model.js";
 import { verifyPaymentSignature } from "../utils/verifySignature.js";
 import { User } from "../models/user.model.js";
 import { Appointment } from "../models/appointment.models.js";
+import { Timeslot } from "../models/timeslot.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
@@ -142,7 +143,18 @@ export const verifyPayment = async (req, res) => {
         );
 
         if (payment) {
-            await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+            const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+            if (appointment) {
+                // Update the Timeslot to Booked
+                await Timeslot.findOneAndUpdate(
+                    {
+                        doctorId: appointment.doctorId,
+                        date: appointment.date,
+                        time: appointment.time
+                    },
+                    { status: "Booked" }
+                );
+            }
             sendConfirmationEmail(payment.appointmentId);
         }
 
@@ -191,7 +203,18 @@ export const webhookController = async (req, res) => {
             );
 
             if (payment) {
-                await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+                const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+                if (appointment) {
+                    // Update the Timeslot to Booked
+                    await Timeslot.findOneAndUpdate(
+                        {
+                            doctorId: appointment.doctorId,
+                            date: appointment.date,
+                            time: appointment.time
+                        },
+                        { status: "Booked" }
+                    );
+                }
                 sendConfirmationEmail(payment.appointmentId);
             }
         }

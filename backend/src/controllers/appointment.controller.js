@@ -31,16 +31,16 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(409, "Selected timeslot is not available");
     }
 
-    // If slot exists and available, or doesn't exist, mark/create as booked
+    // If slot exists and available, or doesn't exist, mark/create as Pending
     if (timeslot) {
-        timeslot.status = "Booked";
+        timeslot.status = "Pending";
         await timeslot.save();
     } else {
         timeslot = await Timeslot.create({
             doctorId,
             date: new Date(date),
             time,
-            status: "Booked"
+            status: "Pending"
         });
     }
 
@@ -66,7 +66,23 @@ export const getAppointments = asyncHandler(async (req, res) => {
         .populate("userId", "name email")
         .populate("doctorId", "name specialization location image");
 
-    return res.status(200).json(new ApiResponse(200, appointments, "Appointments fetched successfully"));
+    // Auto-update past appointments to "Completed"
+    const now = new Date();
+    const updatedAppointments = await Promise.all(appointments.map(async (app) => {
+        if (app.status === "Scheduled") {
+            const appDateTime = new Date(app.date);
+            const [hours, minutes] = app.time.split(':').map(Number);
+            appDateTime.setHours(hours, minutes, 0, 0);
+
+            if (appDateTime < now) {
+                app.status = "Completed";
+                await app.save();
+            }
+        }
+        return app;
+    }));
+
+    return res.status(200).json(new ApiResponse(200, updatedAppointments, "Appointments fetched successfully"));
 });
 
 export const getAppointmentById = asyncHandler(async (req, res) => {
@@ -169,23 +185,58 @@ export const getTimeslotsForDoctor = asyncHandler(async (req, res) => {
     const endOfDay = new Date(queryDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const bookedSlots = await Timeslot.find({
+    const bookedAndPendingSlots = await Timeslot.find({
         doctorId,
         date: {
             $gte: startOfDay,
             $lte: endOfDay
         },
-        status: "Booked"
-    }).select("time");
+        status: { $in: ["Booked", "Pending"] }
+    }).select("time status updatedAt");
 
-    const bookedTimes = bookedSlots.map(slot => slot.time);
+    // Consider "Pending" as booked only if it was updated in the last 15 minutes
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const bookedTimes = bookedAndPendingSlots
+        .filter(slot => {
+            if (slot.status === "Booked") return true;
+            return slot.updatedAt > fifteenMinutesAgo;
+        })
+        .map(slot => slot.time);
 
-    // 3. Construct response
-    const timeslotData = allSlots.map(time => ({
-        id: `${date}-${time}`,
-        time,
-        isAvailable: !bookedTimes.includes(time) // Available if NOT in booked list
-    }));
+    // 3. Construct response and filter past slots for the current date
+    const now = new Date();
+    const isToday = queryDate.toDateString() === now.toDateString();
+
+    const timeslotData = allSlots
+        .map(time => {
+            let isAvailable = !bookedTimes.includes(time);
+
+            // If it's today, hide/disable slots that have already passed
+            if (isToday && isAvailable) {
+                const [slotHour, slotMinute] = time.split(':').map(Number);
+                const slotDateTime = new Date(now);
+                slotDateTime.setHours(slotHour, slotMinute, 0, 0);
+
+                if (slotDateTime < now) {
+                    isAvailable = false;
+                }
+            }
+
+            return {
+                id: `${date}-${time}`,
+                time,
+                isAvailable
+            };
+        })
+        .filter(slot => {
+            if (isToday) {
+                const [slotHour, slotMinute] = slot.time.split(':').map(Number);
+                const slotDateTime = new Date(now);
+                slotDateTime.setHours(slotHour, slotMinute, 0, 0);
+                return slotDateTime > now;
+            }
+            return true;
+        });
 
     return res.status(200).json(new ApiResponse(200, timeslotData, "Timeslots fetched successfully"));
 });

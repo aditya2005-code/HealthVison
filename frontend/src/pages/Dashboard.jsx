@@ -88,15 +88,24 @@ export default function Dashboard() {
         },
     ];
 
-    // Map appointments for display
-    const formattedAppointments = appointments.map(apt => ({
-        id: apt._id,
-        doctorName: apt.doctorId?.name ? (typeof apt.doctorId.name === 'string' ? apt.doctorId.name : `${apt.doctorId.name.first} ${apt.doctorId.name.last}`) : 'Unknown Doctor',
-        specialization: apt.doctorId?.specialization || 'General',
-        date: new Date(apt.date).toLocaleDateString(),
-        time: apt.time,
-        status: apt.status
-    })).slice(0, 5); // Show only recent 5
+    // Map appointments for display, filtering for upcoming ones and sorting chronologically
+    const formattedAppointments = appointments
+        .filter(apt => ['Scheduled', 'Confirmed', 'Pending'].includes(apt.status))
+        .sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            if (dateA - dateB !== 0) return dateA - dateB;
+            return a.time.localeCompare(b.time);
+        })
+        .map(apt => ({
+            id: apt._id,
+            doctorName: apt.doctorId?.name ? (typeof apt.doctorId.name === 'string' ? apt.doctorId.name : `${apt.doctorId.name.first} ${apt.doctorId.name.last}`) : 'Unknown Doctor',
+            specialization: apt.doctorId?.specialization || 'General',
+            date: new Date(apt.date).toLocaleDateString(),
+            time: apt.time,
+            status: apt.status
+        }))
+        .slice(0, 5); // Show only recent 5 upcoming
 
     return (
         <div className="space-y-8">
