@@ -1,18 +1,7 @@
-import axios from 'axios';
-import authService from './auth.service';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import api from './api';
 
 const getStats = async () => {
-    const user = authService.getCurrentUser();
-    const token = user?.token;
-
-    const response = await axios.get(`${API_URL}/dashboard/stats`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-
+    const response = await api.get('/dashboard/stats');
     return response.data;
 };
 

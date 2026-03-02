@@ -1,25 +1,5 @@
-import axios from 'axios';
-
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/auth/';
-
-// Create axios instance with base URL
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-});
-
-// Add a request interceptor to add the auth token to headers
-api.interceptors.request.use(
-    (config) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user && user.token) {
-            config.headers.Authorization = `Bearer ${user.token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+import api from './api';
+import { getCurrentUser, isTokenExpired, logout } from '../utils/jwt.utils';
 
 const login = async (email, password) => {
     try {
@@ -59,14 +39,6 @@ const register = async (userData) => {
     }
 };
 
-const logout = () => {
-    localStorage.removeItem('user');
-};
-
-const getCurrentUser = () => {
-    return JSON.parse(localStorage.getItem('user'));
-};
-
 const forgotPassword = async (email) => {
     try {
         const response = await api.post('/auth/forgot-password', { email });
@@ -90,6 +62,7 @@ const authService = {
     register,
     logout,
     getCurrentUser,
+    isTokenExpired,
     forgotPassword,
     resetPassword,
 };

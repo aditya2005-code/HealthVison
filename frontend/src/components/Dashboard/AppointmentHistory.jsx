@@ -1,5 +1,5 @@
-import React from 'react';
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AppointmentHistory = ({ appointments }) => {
     const getStatusColor = (status) => {
@@ -25,8 +25,8 @@ const AppointmentHistory = ({ appointments }) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-bold text-gray-800">Appointment History</h3>
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</button>
+                <h3 className="font-bold text-gray-800">Upcoming Appointments</h3>
+                <Link to="/appointments" className="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</Link>
             </div>
 
             <div className="overflow-x-auto">
@@ -73,8 +73,14 @@ const AppointmentHistory = ({ appointments }) => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="text-blue-600 hover:text-blue-900 mr-3">Reschedule</button>
-                                        <button className="text-red-600 hover:text-red-900">Cancel</button>
+                                        {(apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Pending') ? (
+                                            <>
+                                                <button className="text-blue-600 hover:text-blue-900 mr-3">Reschedule</button>
+                                                <button className="text-red-600 hover:text-red-900">Cancel</button>
+                                            </>
+                                        ) : (
+                                            <span className="text-gray-400 italic">No actions available</span>
+                                        )}
                                     </td>
                                 </tr>
                             ))

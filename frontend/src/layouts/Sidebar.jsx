@@ -1,15 +1,63 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, X } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen }) {
+    const navItems = [
+        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/doctors', label: 'Find Doctors', icon: Users },
+        { path: '/appointments', label: 'Appointments', icon: Calendar },
+        { path: '/reports', label: 'Reports', icon: FileText },
+        { path: '/chat', label: 'Symptom Chat', icon: MessageSquare },
+    ];
+
+    const toggleClass = isOpen ? 'translate-x-0' : '-translate-x-full';
+    const widthClass = isOpen ? 'w-64' : 'w-0';
+
     return (
-        <aside className="w-64 bg-gray-50 h-full p-4 border-r hidden md:block">
-            <nav className="flex flex-col space-y-2">
-                <Link to="/" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Dashboard</Link>
-                <Link to="/doctors" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Find Doctors</Link>
-                <Link to="/appointments" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Appointments</Link>
-                <Link to="/reports" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Reports</Link>
-                <Link to="/chat" className="p-2 hover:bg-gray-200 rounded font-medium text-gray-700">Symptom Chat</Link>
-            </nav>
-        </aside>
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            <aside className={`
+                fixed md:static inset-y-0 left-0 z-30
+                ${widthClass} bg-white h-full ${isOpen ? 'border-r border-gray-100' : ''} transition-all duration-300 ease-in-out
+                ${toggleClass} overflow-hidden
+            `}>
+                <div className="flex flex-col h-full p-4">
+                    <div className="flex items-center justify-between mb-8 md:hidden">
+                        <span className="font-bold text-blue-600 text-xl">Menu</span>
+                        <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                            <X className="w-6 h-6 text-gray-500" />
+                        </button>
+                    </div>
+
+                    <nav className="flex flex-col space-y-1">
+                        {navItems.map((item) => (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                onClick={() => window.innerWidth < 768 && setIsOpen(false)}
+                                className={({ isActive }) => `
+                                    flex items-center space-x-3 p-3 rounded-xl transition-all duration-200
+                                    ${isActive
+                                        ? 'bg-blue-50 text-blue-600 font-semibold'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'}
+                                `}
+                            >
+                                <item.icon className={`w-5 h-5 ${isOpen || 'md:inline'} transition-colors`} />
+                                <span className={`${isOpen ? 'inline' : 'hidden md:inline'} whitespace-nowrap`}>
+                                    {item.label}
+                                </span>
+                            </NavLink>
+                        ))}
+                    </nav>
+                </div>
+            </aside>
+        </>
     );
 }

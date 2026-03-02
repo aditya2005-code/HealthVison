@@ -3,7 +3,75 @@ import { Payment } from "../models/payment.model.js";
 import { verifyPaymentSignature } from "../utils/verifySignature.js";
 import { User } from "../models/user.model.js";
 import { Appointment } from "../models/appointment.models.js";
+import { Timeslot } from "../models/timeslot.model.js";
+import { Doctor } from "../models/doctor.model.js";
+import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
+
+const sendConfirmationEmail = async (appointmentId) => {
+    try {
+        const appointment = await Appointment.findById(appointmentId)
+            .populate("userId")
+            .populate("doctorId");
+
+        if (!appointment) return;
+
+        const { userId: user, doctorId: doctor, date, time } = appointment;
+
+        const emailHtml = `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <div style="background-color: #007bff; padding: 25px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 24px;">HealthVision</h1>
+                </div>
+                <div style="padding: 30px; background-color: #ffffff;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <span style="background-color: #e7f3ff; color: #007bff; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Confirmed</span>
+                    </div>
+                    <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear <strong>${user.name.first || user.name}</strong>,</p>
+                    <p style="font-size: 16px; color: #555555; line-height: 1.6; margin-bottom: 20px;">Great news! Your appointment has been successfully scheduled and paid.</p>
+                    
+                    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 8px 0; color: #777777; font-size: 14px; width: 100px;">Doctor</td>
+                                <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">Dr. ${doctor.name}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #777777; font-size: 14px;">Date</td>
+                                <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #777777; font-size: 14px;">Time</td>
+                                <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${time}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #777777; font-size: 14px;">Location</td>
+                                <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${doctor.location}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #777777; text-align: center; margin-top: 30px;">
+                        Please arrive 10 minutes before your scheduled time.
+                    </p>
+                </div>
+                <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eeeeee;">
+                    <p style="font-size: 12px; color: #999999; margin: 0;">&copy; 2026 HealthVision. All rights reserved.</p>
+                </div>
+            </div>
+        `;
+
+        await sendEmail({
+            email: user.email,
+            subject: "Appointment Confirmed - HealthVision",
+            message: `Your appointment with Dr. ${doctor.name} on ${new Date(date).toLocaleDateString()} at ${time} is confirmed.`,
+            html: emailHtml
+        });
+        console.log(`Confirmation email sent to ${user.email} for appointment ${appointmentId}`);
+    } catch (error) {
+        console.error("Confirmation email failed:", error);
+    }
+};
 
 export const createPayment = async (req, res) => {
     try {
@@ -75,7 +143,19 @@ export const verifyPayment = async (req, res) => {
         );
 
         if (payment) {
-            await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+            const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+            if (appointment) {
+                // Update the Timeslot to Booked
+                await Timeslot.findOneAndUpdate(
+                    {
+                        doctorId: appointment.doctorId,
+                        date: appointment.date,
+                        time: appointment.time
+                    },
+                    { status: "Booked" }
+                );
+            }
+            sendConfirmationEmail(payment.appointmentId);
         }
 
         return res.status(200).json({ message: "Payment verified successfully", payment });
@@ -123,7 +203,19 @@ export const webhookController = async (req, res) => {
             );
 
             if (payment) {
-                await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+                const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+                if (appointment) {
+                    // Update the Timeslot to Booked
+                    await Timeslot.findOneAndUpdate(
+                        {
+                            doctorId: appointment.doctorId,
+                            date: appointment.date,
+                            time: appointment.time
+                        },
+                        { status: "Booked" }
+                    );
+                }
+                sendConfirmationEmail(payment.appointmentId);
             }
         }
 

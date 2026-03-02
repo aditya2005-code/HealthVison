@@ -31,16 +31,16 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(409, "Selected timeslot is not available");
     }
 
-    // If slot exists and available, or doesn't exist, mark/create as booked
+    // If slot exists and available, or doesn't exist, mark/create as Pending
     if (timeslot) {
-        timeslot.status = "Booked";
+        timeslot.status = "Pending";
         await timeslot.save();
     } else {
         timeslot = await Timeslot.create({
             doctorId,
             date: new Date(date),
             time,
-            status: "Booked"
+            status: "Pending"
         });
     }
 
@@ -52,32 +52,6 @@ export const createAppointment = asyncHandler(async (req, res) => {
         status: "Scheduled",
         paymentStatus: "Pending"
     });
-
-    // Send confirmation email (don't block response if fails)
-    try {
-        const user = await User.findById(userId);
-        const message = `
-            <h1>Appointment Confirmation</h1>
-            <p>Dear ${user.name.first},</p>
-            <p>Your appointment with Dr. ${doctor.name} has been scheduled.</p>
-            <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${time}</p>
-            <p><strong>Location:</strong> ${doctor.location}</p>
-            <p>Status: Scheduled</p>
-            <br>
-            <p>Thank you for choosing HealthVision.</p>
-        `;
-
-        await sendEmail({
-            email: user.email,
-            subject: "Appointment Confirmation - HealthVision",
-            message: `Your appointment with Dr. ${doctor.name} on ${new Date(date).toLocaleDateString()} at ${time} is confirmed.`,
-            html: message
-        });
-    } catch (emailError) {
-        console.error("Email sending failed:", emailError);
-        // Continue execution, don't fail the request
-    }
 
     return res.status(201).json(new ApiResponse(201, appointment, "Appointment created successfully"));
 });
@@ -92,7 +66,23 @@ export const getAppointments = asyncHandler(async (req, res) => {
         .populate("userId", "name email")
         .populate("doctorId", "name specialization location image");
 
-    return res.status(200).json(new ApiResponse(200, appointments, "Appointments fetched successfully"));
+    // Auto-update past appointments to "Completed"
+    const now = new Date();
+    const updatedAppointments = await Promise.all(appointments.map(async (app) => {
+        if (app.status === "Scheduled") {
+            const appDateTime = new Date(app.date);
+            const [hours, minutes] = app.time.split(':').map(Number);
+            appDateTime.setHours(hours, minutes, 0, 0);
+
+            if (appDateTime < now) {
+                app.status = "Completed";
+                await app.save();
+            }
+        }
+        return app;
+    }));
+
+    return res.status(200).json(new ApiResponse(200, updatedAppointments, "Appointments fetched successfully"));
 });
 
 export const getAppointmentById = asyncHandler(async (req, res) => {
@@ -195,38 +185,152 @@ export const getTimeslotsForDoctor = asyncHandler(async (req, res) => {
     const endOfDay = new Date(queryDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const bookedSlots = await Timeslot.find({
+    const bookedAndPendingSlots = await Timeslot.find({
         doctorId,
         date: {
             $gte: startOfDay,
             $lte: endOfDay
         },
-        status: "Booked"
-    }).select("time");
+        status: { $in: ["Booked", "Pending"] }
+    }).select("time status updatedAt");
 
-    const bookedTimes = bookedSlots.map(slot => slot.time);
+    // Consider "Pending" as booked only if it was updated in the last 15 minutes
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const bookedTimes = bookedAndPendingSlots
+        .filter(slot => {
+            if (slot.status === "Booked") return true;
+            return slot.updatedAt > fifteenMinutesAgo;
+        })
+        .map(slot => slot.time);
 
-    // 3. Construct response
-    const timeslotData = allSlots.map(time => ({
-        id: `${date}-${time}`,
-        time,
-        isAvailable: !bookedTimes.includes(time) // Available if NOT in booked list
-    }));
+    // 3. Construct response and filter past slots for the current date
+    const now = new Date();
+    const isToday = queryDate.toDateString() === now.toDateString();
+
+    const timeslotData = allSlots
+        .map(time => {
+            let isAvailable = !bookedTimes.includes(time);
+
+            // If it's today, hide/disable slots that have already passed
+            if (isToday && isAvailable) {
+                const [slotHour, slotMinute] = time.split(':').map(Number);
+                const slotDateTime = new Date(now);
+                slotDateTime.setHours(slotHour, slotMinute, 0, 0);
+
+                if (slotDateTime < now) {
+                    isAvailable = false;
+                }
+            }
+
+            return {
+                id: `${date}-${time}`,
+                time,
+                isAvailable
+            };
+        })
+        .filter(slot => {
+            if (isToday) {
+                const [slotHour, slotMinute] = slot.time.split(':').map(Number);
+                const slotDateTime = new Date(now);
+                slotDateTime.setHours(slotHour, slotMinute, 0, 0);
+                return slotDateTime > now;
+            }
+            return true;
+        });
 
     return res.status(200).json(new ApiResponse(200, timeslotData, "Timeslots fetched successfully"));
 });
-export const cancelAppointment=asyncHandler(req,res)=>{
-    const appointmentId=req.query();
-    const appointment=await Appointment.findById(appointmentId);
-    if(!appointment){
-        throw new ApiError(404,"Appointment not found");
+export const cancelAppointment = asyncHandler(async (req, res) => {
+    const appointmentId = req.params.id;
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+        throw new ApiError(404, "Appointment not found");
     }
-    if(appointment.userId._id.toString()!==req.user.id){
-        throw new ApiError(403,"Unauthorized to cancel this appointment");
+
+    if (appointment.userId._id.toString() !== req.user.id) {
+        throw new ApiError(403, "Unauthorized to cancel this appointment");
     }
-    if(appointment.paymentStatus==="Paid"){
-        console.log("Payment will be transferred to your HealthVision Wallet");
+
+    let message = "Appointment cancelled successfully";
+    if (appointment.paymentStatus === "Paid") {
+        message = "Appointment cancelled successfully. Payment will be transferred to your HealthVision Wallet";
     }
-    await Appointment.findByIdAndDelete(appointmentId);
-    return res.status(200).json(new ApiResponse(200,{},"Appointment cancelled successfully"));
-}
+
+    appointment.status = "Cancelled";
+    await appointment.save();
+
+    // Send cancellation email (async, don't block response)
+    const sendCancellationEmail = async () => {
+        try {
+            const user = await User.findById(req.user.id);
+            const doctor = await Doctor.findById(appointment.doctorId);
+
+            const emailHtml = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                    <div style="background-color: #dc3545; padding: 25px; text-align: center;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">HealthVision</h1>
+                    </div>
+                    <div style="padding: 30px; background-color: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <span style="background-color: #fce8e6; color: #dc3545; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Cancelled</span>
+                        </div>
+                        <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear <strong>${user.name.first || user.name}</strong>,</p>
+                        <p style="font-size: 16px; color: #555555; line-height: 1.6; margin-bottom: 20px;">This is to confirm that your appointment has been cancelled.</p>
+                        
+                        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px; width: 100px;">Doctor</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">Dr. ${doctor.name}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px;">Date</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${new Date(appointment.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px;">Time</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${appointment.time}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        ${appointment.paymentStatus === "Paid" ? `
+                        <div style="border-left: 4px solid #ffc107; background-color: #fff9e6; padding: 15px; margin-bottom: 25px;">
+                            <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.5;">
+                                <strong>Refund Notice:</strong> Your payment will be transferred to your HealthVision Wallet shortly.
+                            </p>
+                        </div>
+                        ` : ''}
+                        
+                        <p style="font-size: 14px; color: #777777; text-align: center; margin-top: 30px;">
+                            If you did not request this cancellation, please contact our support team.
+                        </p>
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eeeeee;">
+                        <p style="font-size: 12px; color: #999999; margin: 0;">&copy; 2026 HealthVision. All rights reserved.</p>
+                    </div>
+                </div>
+            `;
+
+            await sendEmail({
+                email: user.email,
+                subject: "Appointment Cancelled - HealthVision",
+                message: `Your appointment with Dr. ${doctor.name} on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time} has been cancelled.`,
+                html: emailHtml
+            });
+        } catch (error) {
+            console.error("Cancellation email failed:", error);
+        }
+    };
+    sendCancellationEmail();
+
+    // Release the timeslot
+    await Timeslot.deleteOne({
+        doctorId: appointment.doctorId,
+        date: appointment.date,
+        time: appointment.time
+    });
+
+    return res.status(200).json(new ApiResponse(200, {}, message));
+});
