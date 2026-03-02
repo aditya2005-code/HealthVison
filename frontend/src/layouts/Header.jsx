@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import authService from '../services/auth.service';
 import UserProfile from '../components/Dashboard/UserProfile';
 
-export default function Header() {
+export default function Header({ toggleSidebar }) {
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
     const [showProfile, setShowProfile] = useState(false);
@@ -14,9 +15,20 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-white shadow p-4 flex justify-between items-center z-10 relative">
-            <h1 className="text-xl font-bold text-blue-600">HealthVision</h1>
-            <div className="flex space-x-4 items-center">
+        <header className="bg-white shadow p-3 md:p-4 flex justify-between items-center z-30 relative border-b border-gray-100">
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={toggleSidebar}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+                    aria-label="Toggle Menu"
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+                <Link to="/" className="text-xl md:text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                    HealthVision
+                </Link>
+            </div>
+            <div className="flex space-x-2 md:space-x-4 items-center">
                 {user ? (
                     <>
                         <div
@@ -26,7 +38,7 @@ export default function Header() {
                             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
                                 {user.name?.first ? user.name.first.charAt(0).toUpperCase() : 'U'}
                             </div>
-                            <span className="text-gray-700 font-medium">{user.name?.first || 'User'}</span>
+                            <span className="hidden sm:inline text-gray-700 font-medium">{user.name?.first || 'User'}</span>
                         </div>
 
                         {showProfile && (
