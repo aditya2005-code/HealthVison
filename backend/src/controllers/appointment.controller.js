@@ -53,32 +53,6 @@ export const createAppointment = asyncHandler(async (req, res) => {
         paymentStatus: "Pending"
     });
 
-    // Send confirmation email (don't block response if fails)
-    try {
-        const user = await User.findById(userId);
-        const message = `
-            <h1>Appointment Confirmation</h1>
-            <p>Dear ${user.name.first},</p>
-            <p>Your appointment with Dr. ${doctor.name} has been scheduled.</p>
-            <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${time}</p>
-            <p><strong>Location:</strong> ${doctor.location}</p>
-            <p>Status: Scheduled</p>
-            <br>
-            <p>Thank you for choosing HealthVision.</p>
-        `;
-
-        await sendEmail({
-            email: user.email,
-            subject: "Appointment Confirmation - HealthVision",
-            message: `Your appointment with Dr. ${doctor.name} on ${new Date(date).toLocaleDateString()} at ${time} is confirmed.`,
-            html: message
-        });
-    } catch (emailError) {
-        console.error("Email sending failed:", emailError);
-        // Continue execution, don't fail the request
-    }
-
     return res.status(201).json(new ApiResponse(201, appointment, "Appointment created successfully"));
 });
 
@@ -234,6 +208,71 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
 
     appointment.status = "Cancelled";
     await appointment.save();
+
+    // Send cancellation email (async, don't block response)
+    const sendCancellationEmail = async () => {
+        try {
+            const user = await User.findById(req.user.id);
+            const doctor = await Doctor.findById(appointment.doctorId);
+
+            const emailHtml = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                    <div style="background-color: #dc3545; padding: 25px; text-align: center;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">HealthVision</h1>
+                    </div>
+                    <div style="padding: 30px; background-color: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <span style="background-color: #fce8e6; color: #dc3545; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Cancelled</span>
+                        </div>
+                        <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear <strong>${user.name.first || user.name}</strong>,</p>
+                        <p style="font-size: 16px; color: #555555; line-height: 1.6; margin-bottom: 20px;">This is to confirm that your appointment has been cancelled.</p>
+                        
+                        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px; width: 100px;">Doctor</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">Dr. ${doctor.name}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px;">Date</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${new Date(appointment.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px;">Time</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${appointment.time}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        ${appointment.paymentStatus === "Paid" ? `
+                        <div style="border-left: 4px solid #ffc107; background-color: #fff9e6; padding: 15px; margin-bottom: 25px;">
+                            <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.5;">
+                                <strong>Refund Notice:</strong> Your payment will be transferred to your HealthVision Wallet shortly.
+                            </p>
+                        </div>
+                        ` : ''}
+                        
+                        <p style="font-size: 14px; color: #777777; text-align: center; margin-top: 30px;">
+                            If you did not request this cancellation, please contact our support team.
+                        </p>
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eeeeee;">
+                        <p style="font-size: 12px; color: #999999; margin: 0;">&copy; 2026 HealthVision. All rights reserved.</p>
+                    </div>
+                </div>
+            `;
+
+            await sendEmail({
+                email: user.email,
+                subject: "Appointment Cancelled - HealthVision",
+                message: `Your appointment with Dr. ${doctor.name} on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time} has been cancelled.`,
+                html: emailHtml
+            });
+        } catch (error) {
+            console.error("Cancellation email failed:", error);
+        }
+    };
+    sendCancellationEmail();
 
     // Release the timeslot
     await Timeslot.deleteOne({
