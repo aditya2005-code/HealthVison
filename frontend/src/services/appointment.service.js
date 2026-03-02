@@ -35,6 +35,15 @@ const appointmentService = {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;
+    },
+
+    cancelAppointment: async (id) => {
+        const user = authService.getCurrentUser();
+        const token = user?.token;
+        const response = await axios.put(`${API_URL}/appointments/${id}/cancel`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
     }
 };
 

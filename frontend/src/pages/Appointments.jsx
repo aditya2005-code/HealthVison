@@ -30,12 +30,13 @@ const Appointments = () => {
         if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
 
         try {
-            // await appointmentService.cancelAppointment(id); // Backend endpoint might not be ready
-            toast.success("Appointment cancellation requested");
+            const response = await appointmentService.cancelAppointment(id);
+            toast.success(response?.message || "Appointment cancelled successfully");
             // Refresh list
             fetchAppointments();
         } catch (err) {
-            toast.error("Failed to cancel appointment");
+            toast.error(err.response?.data?.message || "Failed to cancel appointment");
+            console.error(err);
         }
     };
 
@@ -90,8 +91,8 @@ const Appointments = () => {
 
                             <div className="flex items-center gap-3">
                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'Scheduled' ? 'bg-green-100 text-green-700' :
-                                        apt.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                                            'bg-gray-100 text-gray-700'
+                                    apt.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                        'bg-gray-100 text-gray-700'
                                     }`}>
                                     {apt.status}
                                 </span>

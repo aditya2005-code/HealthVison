@@ -215,18 +215,32 @@ export const getTimeslotsForDoctor = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, timeslotData, "Timeslots fetched successfully"));
 });
-export const cancelAppointment=asyncHandler(req,res)=>{
-    const appointmentId=req.query();
-    const appointment=await Appointment.findById(appointmentId);
-    if(!appointment){
-        throw new ApiError(404,"Appointment not found");
+export const cancelAppointment = asyncHandler(async (req, res) => {
+    const appointmentId = req.params.id;
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+        throw new ApiError(404, "Appointment not found");
     }
-    if(appointment.userId._id.toString()!==req.user.id){
-        throw new ApiError(403,"Unauthorized to cancel this appointment");
+
+    if (appointment.userId._id.toString() !== req.user.id) {
+        throw new ApiError(403, "Unauthorized to cancel this appointment");
     }
-    if(appointment.paymentStatus==="Paid"){
-        console.log("Payment will be transferred to your HealthVision Wallet");
+
+    let message = "Appointment cancelled successfully";
+    if (appointment.paymentStatus === "Paid") {
+        message = "Appointment cancelled successfully. Payment will be transferred to your HealthVision Wallet";
     }
-    await Appointment.findByIdAndDelete(appointmentId);
-    return res.status(200).json(new ApiResponse(200,{},"Appointment cancelled successfully"));
-}
+
+    appointment.status = "Cancelled";
+    await appointment.save();
+
+    // Release the timeslot
+    await Timeslot.deleteOne({
+        doctorId: appointment.doctorId,
+        date: appointment.date,
+        time: appointment.time
+    });
+
+    return res.status(200).json(new ApiResponse(200, {}, message));
+});
