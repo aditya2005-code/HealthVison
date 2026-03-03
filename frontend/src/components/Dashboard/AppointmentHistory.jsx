@@ -1,9 +1,10 @@
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const AppointmentHistory = ({ appointments }) => {
+const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
     const getStatusColor = (status) => {
         switch (status) {
+            case 'Scheduled':
             case 'Confirmed': return 'bg-green-100 text-green-700';
             case 'Pending': return 'bg-yellow-100 text-yellow-700';
             case 'Cancelled': return 'bg-red-100 text-red-700';
@@ -14,6 +15,7 @@ const AppointmentHistory = ({ appointments }) => {
 
     const getStatusIcon = (status) => {
         switch (status) {
+            case 'Scheduled':
             case 'Confirmed': return <CheckCircle className="w-4 h-4 mr-1" />;
             case 'Pending': return <AlertCircle className="w-4 h-4 mr-1" />;
             case 'Cancelled': return <XCircle className="w-4 h-4 mr-1" />;
@@ -49,7 +51,7 @@ const AppointmentHistory = ({ appointments }) => {
                                                 <User className="w-4 h-4" />
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{apt.doctorName || 'Dr. Smith'}</div>
+                                                <div className="text-sm font-medium text-gray-900">{apt.doctorName || 'Smith'}</div>
                                                 <div className="text-sm text-gray-500">{apt.specialization || 'Cardiologist'}</div>
                                             </div>
                                         </div>
@@ -75,8 +77,18 @@ const AppointmentHistory = ({ appointments }) => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         {(apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Pending') ? (
                                             <>
-                                                <button className="text-blue-600 hover:text-blue-900 mr-3">Reschedule</button>
-                                                <button className="text-red-600 hover:text-red-900">Cancel</button>
+                                                <button
+                                                    onClick={() => onReschedule && onReschedule(apt)}
+                                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                                >
+                                                    Reschedule
+                                                </button>
+                                                <button
+                                                    onClick={() => onCancel && onCancel(apt.id || apt._id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    Cancel
+                                                </button>
                                             </>
                                         ) : (
                                             <span className="text-gray-400 italic">No actions available</span>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Activity, Calendar, FileText, MessageSquare, Search, PlusCircle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
@@ -7,6 +7,7 @@ import dashboardService from '../services/dashboard.service';
 import appointmentService from '../services/appointment.service';
 import StatCard from '../components/Dashboard/StatCard';
 import AppointmentHistory from '../components/Dashboard/AppointmentHistory';
+import RescheduleModal from '../components/Appointment/RescheduleModal';
 import toast from 'react-hot-toast';
 
 export default function Dashboard() {
@@ -20,34 +21,37 @@ export default function Dashboard() {
     const [appointments, setAppointments] = useState([]);
     const [appointmentData, setAppointmentData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const [statsRes, appointmentsRes] = await Promise.all([
+                dashboardService.getStats(),
+                appointmentService.getAppointments()
+            ]);
+
+            if (statsRes.success) {
+                setStats(statsRes.data);
+            }
+
+            if (appointmentsRes.success) {
+                const fetchedAppointments = appointmentsRes.data;
+                setAppointments(fetchedAppointments);
+                processChartData(fetchedAppointments);
+            }
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+            // Don't toast on initial load if we have some data or it's just a refresh
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [statsRes, appointmentsRes] = await Promise.all([
-                    dashboardService.getStats(),
-                    appointmentService.getAppointments()
-                ]);
-
-                if (statsRes.success) {
-                    setStats(statsRes.data);
-                }
-
-                if (appointmentsRes.success) {
-                    const fetchedAppointments = appointmentsRes.data;
-                    setAppointments(fetchedAppointments);
-                    processChartData(fetchedAppointments);
-                }
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
-                toast.error("Failed to load dashboard data");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     const processChartData = (appointments) => {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -62,6 +66,26 @@ export default function Dashboard() {
         // Reorder to start from Mon
         const monSunData = [...data.slice(1), data[0]];
         setAppointmentData(monSunData);
+    };
+
+    const handleCancel = async (id) => {
+        if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
+
+        try {
+            const response = await appointmentService.cancelAppointment(id);
+            toast.success(response?.message || "Appointment cancelled successfully");
+            fetchData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to cancel appointment");
+            console.error(err);
+        }
+    };
+
+    const handleReschedule = (apt) => {
+        // Find the full appointment object if needed, or use the mapped one
+        const fullApt = appointments.find(a => a._id === apt.id);
+        setSelectedAppointment(fullApt);
+        setIsRescheduleModalOpen(true);
     };
 
     const statsCards = [
@@ -126,7 +150,7 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            {loading ? (
+            {loading && appointments.length === 0 ? (
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
@@ -186,7 +210,11 @@ export default function Dashboard() {
                         </div>
 
                         {/* Recent Appointments */}
-                        <AppointmentHistory appointments={formattedAppointments} />
+                        <AppointmentHistory
+                            appointments={formattedAppointments}
+                            onCancel={handleCancel}
+                            onReschedule={handleReschedule}
+                        />
 
                         {/* Quick Actions */}
                         <div>
@@ -250,6 +278,13 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
+
+            <RescheduleModal
+                isOpen={isRescheduleModalOpen}
+                onClose={() => setIsRescheduleModalOpen(false)}
+                appointment={selectedAppointment}
+                onRescheduled={fetchData}
+            />
         </div>
     );
 }
