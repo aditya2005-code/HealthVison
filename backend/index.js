@@ -13,6 +13,7 @@ import reportRoutes from './src/routes/report.routes.js';
 import dashboardRoutes from './src/routes/dashboard.routes.js';
 import chatbotRoutes from './src/routes/chatbot.routes.js';
 import paymentRoutes from './src/routes/payment.routes.js';
+import webrtcRoutes from './src/routes/webrtc.rooutes.js';
 import { webhookController } from './src/controllers/payment.controller.js';
 
 dotenv.config();
@@ -57,6 +58,7 @@ app.post(
   webhookController
 );
 app.use('/api/payment', paymentRoutes);
+app.use('/api/webrtc', webrtcRoutes);
 // 404 Handler - must be after all routes
 import { notFoundHandler } from './src/middleware/error.middleware.js';
 app.use(notFoundHandler);
