@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Calendar, User, CheckCircle } from 'lucide-react';
 import DoctorSelection from '../components/Appointment/DoctorSelection';
@@ -15,6 +15,20 @@ const AppointmentBooking = () => {
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [walletBalance, setWalletBalance] = useState(0);
+    const [useWallet, setUseWallet] = useState(false);
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            try {
+                const res = await paymentService.getWalletBalance();
+                setWalletBalance(res.balance || 0);
+            } catch (error) {
+                console.error("Error fetching balance:", error);
+            }
+        };
+        fetchBalance();
+    }, []);
 
     const handleDoctorSelect = (doctor) => {
         setSelectedDoctor(doctor);
@@ -29,6 +43,14 @@ const AppointmentBooking = () => {
     const handleConfirmBooking = async () => {
         try {
             setLoading(true);
+            const fee = selectedDoctor.fee || selectedDoctor.fees || 500;
+
+            if (useWallet && walletBalance < fee) {
+                toast.error("Insufficient wallet balance");
+                setLoading(false);
+                return;
+            }
+
             const bookingData = {
                 doctorId: selectedDoctor._id,
                 date: selectedSlot.date,
@@ -45,55 +67,54 @@ const AppointmentBooking = () => {
                 throw new Error("Failed to retrieve appointment ID");
             }
 
-            // 2. Initiate Payment (Create Order on Backend)
-            const fee = selectedDoctor.fee || selectedDoctor.fees || 500;
-            const paymentRes = await paymentService.createPayment(fee, appointmentId);
-            const order = paymentRes.order;
+            if (useWallet) {
+                // 2a. Wallet Payment Flow
+                toast.loading('Processing wallet payment...', { id: 'wallet-payment' });
+                await paymentService.walletPayment(fee, appointmentId);
+                toast.success('Payment successful & Appointment confirmed!', { id: 'wallet-payment' });
+                navigate('/payment/success');
+            } else {
+                // 2b. Razorpay Flow
+                const paymentRes = await paymentService.createPayment(fee, appointmentId);
+                const order = paymentRes.order;
 
-            // 3. Open Razorpay Checkout Modal
-            const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_mock_key", // Fallback for dev if not set
-                amount: order.amount,
-                currency: order.currency,
-                name: "HealthVision",
-                description: `Consultation with ${selectedDoctor.name}`,
-                order_id: order.id,
-                handler: async function (response) {
-                    try {
-                        // 4. Verify Payment on Backend
-                        toast.loading('Verifying payment...', { id: 'payment-verify' });
-                        await paymentService.verifyPayment({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
-                        });
-                        toast.success('Payment successful & Appointment confirmed!', { id: 'payment-verify' });
-                        navigate('/payment/success');
-                    } catch (error) {
-                        toast.error(error.response?.data?.message || 'Payment verification failed', { id: 'payment-verify' });
-                        console.error("Payment Verification Error:", error);
-                        navigate('/payment/failure');
-                    }
-                },
-                prefill: {
-                    name: authService.getCurrentUser()?.name || authService.getCurrentUser()?.name?.first || "Patient",
-                    email: authService.getCurrentUser()?.email || "patient@example.com",
-                    contact: authService.getCurrentUser()?.phone || "9999999999"
-                },
-                theme: {
-                    color: "#2563eb"
-                }
-            };
+                const options = {
+                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_mock_key",
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "HealthVision",
+                    description: `Consultation with ${selectedDoctor.name}`,
+                    order_id: order.id,
+                    handler: async function (response) {
+                        try {
+                            toast.loading('Verifying payment...', { id: 'payment-verify' });
+                            await paymentService.verifyPayment({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+                            toast.success('Payment successful & Appointment confirmed!', { id: 'payment-verify' });
+                            navigate('/payment/success');
+                        } catch (error) {
+                            toast.error(error.response?.data?.message || 'Payment verification failed', { id: 'payment-verify' });
+                            navigate('/payment/failure');
+                        }
+                    },
+                    prefill: {
+                        name: authService.getCurrentUser()?.name || authService.getCurrentUser()?.name?.first || "Patient",
+                        email: authService.getCurrentUser()?.email || "patient@example.com",
+                        contact: authService.getCurrentUser()?.phone || "9999999999"
+                    },
+                    theme: { color: "#2563eb" }
+                };
 
-            const rzp = new window.Razorpay(options);
-
-            rzp.on('payment.failed', function (response) {
-                toast.error(`Payment Failed: ${response.error.description || 'An error occurred'}`);
-                console.error("Payment Failed:", response.error);
-                navigate('/payment/failure');
-            });
-
-            rzp.open();
+                const rzp = new window.Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    toast.error(`Payment Failed: ${response.error.description || 'An error occurred'}`);
+                    navigate('/payment/failure');
+                });
+                rzp.open();
+            }
 
         } catch (error) {
             console.error('Booking/Payment failed:', error);
@@ -195,6 +216,9 @@ const AppointmentBooking = () => {
                             time={selectedSlot?.time}
                             onConfirm={handleConfirmBooking}
                             loading={loading}
+                            walletBalance={walletBalance}
+                            useWallet={useWallet}
+                            setUseWallet={setUseWallet}
                         />
                     </div>
                 )}

@@ -118,6 +118,10 @@ const userSchema = new mongoose.Schema({
     policyNumber: String,
     validTill: Date
   },
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
   resetPasswordToken: String,
   resetPasswordExpire: Date
 }, {

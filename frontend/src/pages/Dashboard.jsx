@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Activity, Calendar, FileText, MessageSquare, Search, PlusCircle, TrendingUp } from 'lucide-react';
+import { Activity, Calendar, FileText, MessageSquare, Search, PlusCircle, TrendingUp, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import authService from '../services/auth.service';
 import dashboardService from '../services/dashboard.service';
 import appointmentService from '../services/appointment.service';
+import paymentService from '../services/payment.service';
 import StatCard from '../components/Dashboard/StatCard';
 import AppointmentHistory from '../components/Dashboard/AppointmentHistory';
 import RescheduleModal from '../components/Appointment/RescheduleModal';
@@ -18,6 +19,7 @@ export default function Dashboard() {
         reports: 0,
         consultations: 0
     });
+    const [walletBalance, setWalletBalance] = useState(0);
     const [appointments, setAppointments] = useState([]);
     const [appointmentData, setAppointmentData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,9 +29,10 @@ export default function Dashboard() {
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const [statsRes, appointmentsRes] = await Promise.all([
+            const [statsRes, appointmentsRes, balanceRes] = await Promise.all([
                 dashboardService.getStats(),
-                appointmentService.getAppointments()
+                appointmentService.getAppointments(),
+                paymentService.getWalletBalance()
             ]);
 
             if (statsRes.success) {
@@ -40,6 +43,10 @@ export default function Dashboard() {
                 const fetchedAppointments = appointmentsRes.data;
                 setAppointments(fetchedAppointments);
                 processChartData(fetchedAppointments);
+            }
+
+            if (balanceRes) {
+                setWalletBalance(balanceRes.balance || 0);
             }
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -69,16 +76,50 @@ export default function Dashboard() {
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
-
-        try {
-            const response = await appointmentService.cancelAppointment(id);
-            toast.success(response?.message || "Appointment cancelled successfully");
-            fetchData();
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to cancel appointment");
-            console.error(err);
-        }
+        toast((t) => (
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-rose-600">
+                    <Activity className="w-5 h-5" />
+                    <p className="font-bold text-gray-900">Cancel Appointment?</p>
+                </div>
+                <p className="text-xs text-gray-500 font-medium">
+                    Please note: 20% of the consultation fee will be deducted as cancellation charges.
+                </p>
+                <div className="flex gap-2 mt-2">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            try {
+                                const response = await appointmentService.cancelAppointment(id);
+                                toast.success(response?.message || "Appointment cancelled successfully");
+                                fetchData();
+                            } catch (err) {
+                                toast.error(err.response?.data?.message || "Failed to cancel appointment");
+                                console.error(err);
+                            }
+                        }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm"
+                    >
+                        Confirm Cancellation
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+                    >
+                        Keep It
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: 6000,
+            position: 'top-center',
+            style: {
+                borderRadius: '20px',
+                padding: '16px',
+                border: '1px solid #fee2e2',
+                maxWidth: '400px'
+            }
+        });
     };
 
     const handleReschedule = (apt) => {
@@ -109,6 +150,13 @@ export default function Dashboard() {
             icon: Activity,
             color: 'bg-purple-500',
             description: 'Successfully completed'
+        },
+        {
+            title: 'Wallet Balance',
+            value: `₹${walletBalance.toLocaleString()}`,
+            icon: Wallet,
+            color: 'bg-orange-500',
+            description: 'Refunds & Credits'
         },
     ];
 
@@ -159,7 +207,7 @@ export default function Dashboard() {
                     {/* Main Content Area */}
                     <div className="lg:col-span-3 space-y-8">
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {statsCards.map((stat, index) => (
                                 <StatCard key={index} {...stat} />
                             ))}

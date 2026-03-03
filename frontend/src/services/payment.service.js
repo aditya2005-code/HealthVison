@@ -17,6 +17,19 @@ const paymentService = {
     getPaymentHistory: async () => {
         const response = await api.get('/payment/history');
         return response.data;
+    },
+
+    getWalletBalance: async () => {
+        const response = await api.get('/payment/balance');
+        return response.data;
+    },
+
+    walletPayment: async (amount, appointmentId) => {
+        const response = await api.post('/payment/wallet-payment', {
+            amount,
+            appointmentId
+        });
+        return response.data;
     }
 };
 

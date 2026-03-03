@@ -7,6 +7,7 @@ import { Timeslot } from "../models/timeslot.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
+import mongoose from "mongoose";
 
 const sendConfirmationEmail = async (appointmentId) => {
     try {
@@ -176,6 +177,89 @@ export const getPaymentHistory = async (req, res) => {
     } catch (error) {
         console.error("Error fetching payment history:", error);
         return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const getWalletBalance = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).select("walletBalance");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        return res.status(200).json({ balance: user.walletBalance || 0 });
+    } catch (error) {
+        console.error("Error fetching wallet balance:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const walletPayment = async (req, res) => {
+    try {
+        const { amount, appointmentId } = req.body;
+        const userId = req.user.id;
+
+        if (!amount || !appointmentId) {
+            return res.status(400).json({ message: "Amount and Appointment ID are required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const currentBalance = user.walletBalance || 0;
+        if (currentBalance < amount) {
+            return res.status(400).json({ message: "Insufficient wallet balance" });
+        }
+
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: "Appointment not found" });
+        }
+
+        // 1. Deduct from wallet
+        user.walletBalance = currentBalance - amount;
+        await user.save();
+
+        // 2. Mark appointment as paid
+        appointment.paymentStatus = "Paid";
+        appointment.status = "Scheduled"; // Ensure it's marked as scheduled if it was pending
+        await appointment.save();
+
+        // 3. Update Timeslot
+        await Timeslot.findOneAndUpdate(
+            {
+                doctorId: appointment.doctorId,
+                date: appointment.date,
+                time: appointment.time
+            },
+            { status: "Booked" }
+        );
+
+        // 4. Create Payment record
+        const walletTransactionId = `wallet_${Date.now()}`;
+        await Payment.create({
+            userId: user._id,
+            appointmentId: appointment._id,
+            amount: amount,
+            status: "completed",
+            paymentId: walletTransactionId,
+            transactionId: walletTransactionId
+        });
+
+        // Send email (async)
+        sendConfirmationEmail(appointmentId);
+
+        return res.status(200).json({ message: "Payment successful using wallet balance" });
+    } catch (error) {
+        console.error("Wallet Payment Error:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
     }
 };
 

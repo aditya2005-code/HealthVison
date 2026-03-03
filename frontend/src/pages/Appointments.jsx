@@ -1,20 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw, Filter, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw, Filter, ChevronRight, Wallet } from 'lucide-react';
 import appointmentService from '../services/appointment.service';
 import RescheduleModal from '../components/Appointment/RescheduleModal';
+import paymentService from '../services/payment.service';
 import toast from 'react-hot-toast';
 
 const Appointments = () => {
+    const navigate = useNavigate();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState('Upcoming'); // Upcoming, Past, Cancelled, All
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+    const [walletBalance, setWalletBalance] = useState(0);
 
     useEffect(() => {
         fetchAppointments();
+        fetchBalance();
     }, []);
+
+    const fetchBalance = async () => {
+        try {
+            const response = await paymentService.getWalletBalance();
+            setWalletBalance(response.balance || 0);
+        } catch (err) {
+            console.error("Error fetching balance:", err);
+        }
+    };
 
     const fetchAppointments = async () => {
         try {
@@ -42,16 +56,51 @@ const Appointments = () => {
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
-
-        try {
-            const response = await appointmentService.cancelAppointment(id);
-            toast.success(response?.message || "Appointment cancelled successfully");
-            fetchAppointments();
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to cancel appointment");
-            console.error(err);
-        }
+        toast((t) => (
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-rose-600">
+                    <AlertCircle className="w-5 h-5" />
+                    <p className="font-bold text-gray-900">Cancel Appointment?</p>
+                </div>
+                <p className="text-xs text-gray-500 font-medium">
+                    Please note: 20% of the consultation fee will be deducted as cancellation charges.
+                </p>
+                <div className="flex gap-2 mt-2">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            try {
+                                const response = await appointmentService.cancelAppointment(id);
+                                toast.success(response?.message || "Appointment cancelled successfully");
+                                fetchAppointments();
+                                fetchBalance();
+                            } catch (err) {
+                                toast.error(err.response?.data?.message || "Failed to cancel appointment");
+                                console.error(err);
+                            }
+                        }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm"
+                    >
+                        Confirm Cancellation
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+                    >
+                        Keep It
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: 6000,
+            position: 'top-center',
+            style: {
+                borderRadius: '20px',
+                padding: '16px',
+                border: '1px solid #fee2e2',
+                maxWidth: '400px'
+            }
+        });
     };
 
     const handleRescheduleClick = (apt) => {
@@ -115,6 +164,17 @@ const Appointments = () => {
                     <h1 className="text-3xl font-extrabold text-gray-900 font-primary tracking-tight">My Appointments</h1>
                     <p className="text-gray-500 mt-1">Manage and track your healthcare consultations</p>
                 </div>
+
+                {/* Wallet Balance Chip */}
+                <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                        <Wallet className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Your Balance</p>
+                        <p className="text-lg font-black text-gray-900 leading-none">₹{walletBalance.toLocaleString()}</p>
+                    </div>
+                </div>
             </div>
 
             {error && (
@@ -152,7 +212,10 @@ const Appointments = () => {
                             : `No appointments found in the ${filter.toLowerCase()} category.`}
                     </p>
                     {filter === 'Upcoming' && (
-                        <button className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95">
+                        <button
+                            onClick={() => navigate('/appointments/book')}
+                            className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95"
+                        >
                             Book Now
                         </button>
                     )}
