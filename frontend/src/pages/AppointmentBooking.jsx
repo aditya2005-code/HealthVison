@@ -56,7 +56,7 @@ const AppointmentBooking = () => {
                 amount: order.amount,
                 currency: order.currency,
                 name: "HealthVision",
-                description: `Consultation with Dr. ${selectedDoctor.name}`,
+                description: `Consultation with ${selectedDoctor.name}`,
                 order_id: order.id,
                 handler: async function (response) {
                     try {

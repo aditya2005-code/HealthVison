@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, User, AlertCircle, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw, Filter, ChevronRight } from 'lucide-react';
 import appointmentService from '../services/appointment.service';
+import RescheduleModal from '../components/Appointment/RescheduleModal';
 import toast from 'react-hot-toast';
 
 const Appointments = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [filter, setFilter] = useState('Upcoming'); // Upcoming, Past, Cancelled, All
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
 
     useEffect(() => {
         fetchAppointments();
@@ -18,12 +22,14 @@ const Appointments = () => {
             const response = await appointmentService.getAppointments();
             const data = response.data || response;
 
-            // Sort chronologically (soonest first)
+            // Sort chronologically (soonest or most recent first)
             const sortedData = [...data].sort((a, b) => {
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
-                if (dateA - dateB !== 0) return dateA - dateB;
-                return a.time.localeCompare(b.time);
+                if (dateA - dateB !== 0) {
+                    return filter === 'Past' ? dateB - dateA : dateA - dateB;
+                }
+                return filter === 'Past' ? b.time.localeCompare(a.time) : a.time.localeCompare(b.time);
             });
 
             setAppointments(sortedData);
@@ -41,7 +47,6 @@ const Appointments = () => {
         try {
             const response = await appointmentService.cancelAppointment(id);
             toast.success(response?.message || "Appointment cancelled successfully");
-            // Refresh list
             fetchAppointments();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to cancel appointment");
@@ -49,7 +54,53 @@ const Appointments = () => {
         }
     };
 
-    if (loading) {
+    const handleRescheduleClick = (apt) => {
+        setSelectedAppointment(apt);
+        setIsRescheduleModalOpen(true);
+    };
+
+    const filteredAppointments = useMemo(() => {
+        if (filter === 'All') return appointments;
+        if (filter === 'Upcoming') return appointments.filter(a => a.status === 'Scheduled');
+        if (filter === 'Past') return appointments.filter(a => a.status === 'Completed');
+        if (filter === 'Cancelled') return appointments.filter(a => a.status === 'Cancelled');
+        return appointments;
+    }, [appointments, filter]);
+
+    const getStatusStyles = (status) => {
+        switch (status) {
+            case 'Scheduled':
+                return {
+                    bg: 'bg-blue-50',
+                    text: 'text-blue-700',
+                    border: 'border-blue-100',
+                    icon: <Clock className="w-3.5 h-3.5" />
+                };
+            case 'Completed':
+                return {
+                    bg: 'bg-emerald-50',
+                    text: 'text-emerald-700',
+                    border: 'border-emerald-100',
+                    icon: <CheckCircle className="w-3.5 h-3.5" />
+                };
+            case 'Cancelled':
+                return {
+                    bg: 'bg-rose-50',
+                    text: 'text-rose-700',
+                    border: 'border-rose-100',
+                    icon: <X className="w-3.5 h-3.5" />
+                };
+            default:
+                return {
+                    bg: 'bg-gray-50',
+                    text: 'text-gray-700',
+                    border: 'border-gray-100',
+                    icon: <AlertCircle className="w-3.5 h-3.5" />
+                };
+        }
+    };
+
+    if (loading && appointments.length === 0) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
@@ -58,67 +109,136 @@ const Appointments = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto py-8 px-4">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6 font-primary">My Appointments</h1>
+        <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-3xl font-extrabold text-gray-900 font-primary tracking-tight">My Appointments</h1>
+                    <p className="text-gray-500 mt-1">Manage and track your healthcare consultations</p>
+                </div>
+            </div>
 
             {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 flex items-center">
-                    <AlertCircle className="w-5 h-5 mr-2" />
-                    {error}
+                <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 flex items-center border border-rose-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <p className="font-medium">{error}</p>
                 </div>
             )}
 
-            {appointments.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
-                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium text-gray-900">No appointments scheduled</h3>
-                    <p className="text-gray-500">Book your first consultation with our doctors.</p>
+            {/* Filter Tabs */}
+            <div className="flex p-1.5 bg-gray-100/80 backdrop-blur-sm rounded-2xl mb-8 w-fit gap-1 border border-gray-200 shadow-inner">
+                {['Upcoming', 'Past', 'Cancelled', 'All'].map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setFilter(tab)}
+                        className={`px-5 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${filter === tab
+                            ? 'bg-white text-blue-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
+                            : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
+                            }`}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
+            {filteredAppointments.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Calendar className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">No {filter.toLowerCase()} appointments</h3>
+                    <p className="text-gray-500 max-w-xs mx-auto mt-2">
+                        {filter === 'Upcoming'
+                            ? "You don't have any sessions scheduled right now."
+                            : `No appointments found in the ${filter.toLowerCase()} category.`}
+                    </p>
+                    {filter === 'Upcoming' && (
+                        <button className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all hover:shadow-xl active:scale-95">
+                            Book Now
+                        </button>
+                    )}
                 </div>
             ) : (
-                <div className="grid gap-4">
-                    {appointments.map((apt) => (
-                        <div key={apt._id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">
-                                    {apt.doctorId?.name?.charAt(0) || 'D'}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900">{apt.doctorId?.name || 'Unknown Doctor'}</h3>
-                                    <p className="text-blue-600 text-sm font-medium">{apt.doctorId?.specialization || 'General'}</p>
-                                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <Calendar className="w-4 h-4" />
-                                            {new Date(apt.date).toLocaleDateString()}
+                <div className="grid gap-5">
+                    {filteredAppointments.map((apt) => {
+                        const style = getStatusStyles(apt.status);
+                        return (
+                            <div key={apt._id} className="group bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 relative overflow-hidden">
+                                {/* Status Glow Effect */}
+                                <div className={`absolute -left-4 top-0 bottom-0 w-1 ${style.bg} blur-sm group-hover:blur-md transition-all`}></div>
+
+                                <div className="flex items-center gap-5 z-10">
+                                    <div className="relative">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-blue-600 font-extrabold text-2xl shadow-inner border border-white">
+                                            {apt.doctorId?.name?.charAt(0) || 'D'}
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="w-4 h-4" />
-                                            {apt.time}
+                                        <div className={`absolute -bottom-1 -right-1 p-1 rounded-lg border-2 border-white shadow-sm ${style.bg} ${style.text}`}>
+                                            {style.icon}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors leading-tight">
+                                            {apt.doctorId?.name || 'Unknown Doctor'}
+                                        </h3>
+                                        <p className="text-blue-600 text-sm font-bold tracking-wide uppercase opacity-80 decoration-slice">
+                                            {apt.doctorId?.specialization || 'General'}
+                                        </p>
+                                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2.5">
+                                            <div className="flex items-center gap-1.5 text-sm text-gray-500 font-medium">
+                                                <Calendar className="w-4 h-4 text-blue-500/70" />
+                                                {new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-sm text-gray-500 font-medium">
+                                                <Clock className="w-4 h-4 text-blue-500/70" />
+                                                {apt.time}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-3">
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'Scheduled' ? 'bg-green-100 text-green-700' :
-                                    apt.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                                        'bg-gray-100 text-gray-700'
-                                    }`}>
-                                    {apt.status}
-                                </span>
-                                {apt.status === 'Scheduled' && (
-                                    <button
-                                        onClick={() => handleCancel(apt._id)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Cancel Appointment"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                )}
+                                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto z-10">
+                                    <span className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold border ${style.bg} ${style.text} ${style.border} shadow-sm uppercase tracking-wider`}>
+                                        {apt.status}
+                                    </span>
+
+                                    {apt.status === 'Scheduled' && (
+                                        <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                                            <button
+                                                onClick={() => handleRescheduleClick(apt)}
+                                                className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white rounded-xl text-sm font-bold border border-gray-100 transition-all duration-200 active:scale-95 shadow-sm"
+                                                title="Reschedule"
+                                            >
+                                                <RefreshCcw className="w-4 h-4" />
+                                                <span className="hidden sm:inline">Reschedule</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleCancel(apt._id)}
+                                                className="p-2 bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-xl border border-gray-100 transition-all active:scale-95 shadow-sm"
+                                                title="Cancel Appointment"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {(apt.status === 'Completed' || apt.status === 'Cancelled') && (
+                                        <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-sm font-bold border border-gray-100 transition-all group/btn">
+                                            Details
+                                            <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
+
+            <RescheduleModal
+                isOpen={isRescheduleModalOpen}
+                onClose={() => setIsRescheduleModalOpen(false)}
+                appointment={selectedAppointment}
+                onRescheduled={fetchAppointments}
+            />
         </div>
     );
 };
