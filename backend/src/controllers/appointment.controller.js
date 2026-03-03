@@ -282,7 +282,7 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr>
                                     <td style="padding: 8px 0; color: #777777; font-size: 14px; width: 100px;">Doctor</td>
-                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">Dr. ${doctor.name}</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${doctor.name}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 8px 0; color: #777777; font-size: 14px;">Date</td>
@@ -333,4 +333,126 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
     });
 
     return res.status(200).json(new ApiResponse(200, {}, message));
+});
+
+export const rescheduleAppointment = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { date, time } = req.body;
+
+    if (!date || !time) {
+        throw new ApiError(400, "New date and time are required");
+    }
+
+    const appointment = await Appointment.findById(id);
+
+    if (!appointment) {
+        throw new ApiError(404, "Appointment not found");
+    }
+
+    if (appointment.userId.toString() !== req.user.id) {
+        throw new ApiError(403, "Unauthorized to reschedule this appointment");
+    }
+
+    if (appointment.status !== "Scheduled") {
+        throw new ApiError(400, `Cannot reschedule appointment with status: ${appointment.status}`);
+    }
+
+    // 1. Check if the new slot is available
+    const existingSlot = await Timeslot.findOne({
+        doctorId: appointment.doctorId,
+        date: new Date(date),
+        time
+    });
+
+    if (existingSlot && existingSlot.status === "Booked") {
+        throw new ApiError(409, "The selected timeslot is already booked");
+    }
+
+    // 2. Release the old timeslot
+    await Timeslot.deleteOne({
+        doctorId: appointment.doctorId,
+        date: appointment.date,
+        time: appointment.time
+    });
+
+    // 3. Create/Update the new timeslot
+    if (existingSlot) {
+        existingSlot.status = "Booked";
+        await existingSlot.save();
+    } else {
+        await Timeslot.create({
+            doctorId: appointment.doctorId,
+            date: new Date(date),
+            time,
+            status: "Booked"
+        });
+    }
+
+    // 4. Update the appointment
+    const oldDate = appointment.date;
+    const oldTime = appointment.time;
+
+    appointment.date = new Date(date);
+    appointment.time = time;
+    await appointment.save();
+
+    // 5. Send rescheduling confirmation email (async)
+    const sendRescheduleEmail = async () => {
+        try {
+            const user = await User.findById(req.user.id);
+            const doctor = await Doctor.findById(appointment.doctorId);
+
+            const emailHtml = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                    <div style="background-color: #2563eb; padding: 25px; text-align: center;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">HealthVision</h1>
+                    </div>
+                    <div style="padding: 30px; background-color: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <span style="background-color: #e0e7ff; color: #2563eb; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Rescheduled</span>
+                        </div>
+                        <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear <strong>${user.name.first || user.name}</strong>,</p>
+                        <p style="font-size: 16px; color: #555555; line-height: 1.6; margin-bottom: 20px;">Your appointment has been successfully rescheduled.</p>
+                        
+                        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                            <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">New Appointment Details</h4>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px; width: 100px;">Doctor</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${doctor.name}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px;">Date</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #777777; font-size: 14px;">Time</td>
+                                    <td style="padding: 8px 0; color: #333333; font-weight: 600; font-size: 15px;">${time}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="font-size: 13px; color: #999; text-align: center;">
+                            Previous details: ${new Date(oldDate).toLocaleDateString()} at ${oldTime}
+                        </div>
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eeeeee;">
+                        <p style="font-size: 12px; color: #999999; margin: 0;">&copy; 2026 HealthVision. All rights reserved.</p>
+                    </div>
+                </div>
+            `;
+
+            await sendEmail({
+                email: user.email,
+                subject: "Appointment Rescheduled - HealthVision",
+                message: `Your appointment with ${doctor.name} has been rescheduled to ${new Date(date).toLocaleDateString()} at ${time}.`,
+                html: emailHtml
+            });
+        } catch (error) {
+            console.error("Rescheduling email failed:", error);
+        }
+    };
+    sendRescheduleEmail();
+
+    return res.status(200).json(new ApiResponse(200, appointment, "Appointment rescheduled successfully"));
 });
