@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, User, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, CheckCircle, Wallet } from 'lucide-react';
 
-const BookingConfirmation = ({ doctor, date, time, onConfirm, loading }) => {
+const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBalance, useWallet, setUseWallet }) => {
     if (!doctor || !date || !time) return null;
 
     const formattedDate = new Date(date).toLocaleDateString('en-US', {
@@ -83,11 +83,38 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading }) => {
                     </div>
                 </div>
 
+                {/* Wallet Payment Option */}
+                <div className="mb-8 p-6 rounded-2xl border-2 transition-all cursor-pointer group"
+                    onClick={() => setUseWallet(!useWallet)}
+                    style={{
+                        borderColor: useWallet ? '#2563eb' : '#f1f5f9',
+                        backgroundColor: useWallet ? '#eff6ff' : '#ffffff'
+                    }}
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${useWallet ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                <Wallet className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-gray-900">Use Wallet Balance</h4>
+                                <p className="text-sm text-gray-500 font-medium">Available: ₹{walletBalance.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${useWallet ? 'bg-blue-600 border-blue-600 scale-110' : 'bg-white border-gray-300'}`}>
+                            {useWallet && <CheckCircle className="w-4 h-4 text-white" />}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                        className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center ${useWallet
+                                ? (walletBalance >= (doctor.fee || doctor.fees || 500) ? 'bg-green-600 hover:bg-green-700 shadow-green-200 text-white' : 'bg-gray-400 cursor-not-allowed text-white')
+                                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white'
+                            }`}
                     >
                         {loading ? (
                             <>
@@ -95,7 +122,7 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading }) => {
                                 Processing...
                             </>
                         ) : (
-                            'Confirm & Pay'
+                            useWallet ? (walletBalance >= (doctor.fee || doctor.fees || 500) ? 'Pay with Wallet' : 'Insufficient Balance') : 'Confirm & Pay'
                         )}
                     </button>
                     <p className="text-center text-xs text-gray-400">
