@@ -254,7 +254,15 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
 
     let message = "Appointment cancelled successfully";
     if (appointment.paymentStatus === "Paid") {
-        message = "Appointment cancelled successfully. Payment will be transferred to your HealthVision Wallet";
+        const user = await User.findById(req.user.id);
+        const doctor = await Doctor.findById(appointment.doctorId);
+        if (user && doctor) {
+            const fee = doctor.fee || 500;
+            const refundAmount = fee * 0.8;
+            user.walletBalance = (user.walletBalance || 0) + refundAmount;
+            await user.save();
+            message = `Appointment cancelled successfully. A refund of ₹${refundAmount} (after 20% cancellation fee) has been added to your HealthVision Wallet`;
+        }
     }
 
     appointment.status = "Cancelled";
@@ -349,7 +357,7 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Appointment not found");
     }
 
-    if (appointment.userId.toString() !== req.user.id) {
+    if (appointment.userId._id.toString() !== req.user.id && appointment.userId.toString() !== req.user.id) {
         throw new ApiError(403, "Unauthorized to reschedule this appointment");
     }
 
