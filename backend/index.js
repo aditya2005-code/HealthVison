@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import http from 'http';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './src/config/swagger.js';
 import { errorHandler } from './src/middleware/error.middleware.js';
@@ -13,12 +14,17 @@ import reportRoutes from './src/routes/report.routes.js';
 import dashboardRoutes from './src/routes/dashboard.routes.js';
 import chatbotRoutes from './src/routes/chatbot.routes.js';
 import paymentRoutes from './src/routes/payment.routes.js';
-import webrtcRoutes from './src/routes/webrtc.rooutes.js';
+import webrtcRoutes from './src/routes/webrtc.routes.js';
 import { webhookController } from './src/controllers/payment.controller.js';
+import { setupSocket } from './src/services/socket.service.js';
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+setupSocket(server);
 
 // Middleware
 app.use(cors());
@@ -67,6 +73,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
