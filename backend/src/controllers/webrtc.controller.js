@@ -1,5 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Consultation } from "../models/consultation.model.js";
+import { Appointment } from "../models/appointment.models.js";
 
 // Dummy in-memory store for 1-to-1 signaling data
 const signalingStore = new Map();
@@ -109,5 +111,38 @@ export const clearSignalingData = async (req, res, next) => {
         res.status(200).json(new ApiResponse(200, {}, "Signaling data cleared successfully"));
     } catch (error) {
         next(new ApiError(500, "Failed to clear signaling data"));
+    }
+};
+
+export const getConsultationHistory = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        // Find appointments for the user
+        const appointments = await Appointment.find({ userId });
+        const appointmentIds = appointments.map(a => a._id);
+
+        const history = await Consultation.find({
+            appointmentId: { $in: appointmentIds }
+        }).populate("appointmentId");
+
+        res.status(200).json(new ApiResponse(200, history, "Consultation history retrieved successfully"));
+    } catch (error) {
+        next(new ApiError(500, "Failed to get consultation history"));
+    }
+};
+
+export const getRoomStatus = async (req, res, next) => {
+    try {
+        const { roomId } = req.params;
+        const consultation = await Consultation.findOne({ roomId });
+
+        if (!consultation) {
+            return next(new ApiError(404, "Room not found"));
+        }
+
+        res.status(200).json(new ApiResponse(200, consultation, "Room status retrieved successfully"));
+    } catch (error) {
+        next(new ApiError(500, "Failed to get room status"));
     }
 };
