@@ -60,7 +60,7 @@ export const getAppointments = asyncHandler(async (req, res) => {
     const appointments = await Appointment.find({
         $or: [
             { userId: req.user.id },
-            // { doctorId: req.user.id } // Disabled until Doctor-User linkage is established
+            { doctorId: req.user.id }
         ]
     })
         .populate("userId", "name email")

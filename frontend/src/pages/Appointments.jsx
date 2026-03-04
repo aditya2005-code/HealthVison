@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw, Filter, ChevronRight, Wallet } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw, Filter, ChevronRight, Wallet, Video } from 'lucide-react';
 import appointmentService from '../services/appointment.service';
 import RescheduleModal from '../components/Appointment/RescheduleModal';
 import paymentService from '../services/payment.service';
@@ -106,6 +106,11 @@ const Appointments = () => {
     const handleRescheduleClick = (apt) => {
         setSelectedAppointment(apt);
         setIsRescheduleModalOpen(true);
+    };
+
+    const handleJoinConsultation = (apt) => {
+        const roomId = apt.roomId || `room_${apt._id}`;
+        navigate(`/consultation/${roomId}?appointmentId=${apt._id}`);
     };
 
     const filteredAppointments = useMemo(() => {
@@ -265,6 +270,14 @@ const Appointments = () => {
 
                                     {apt.status === 'Scheduled' && (
                                         <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                                            <button
+                                                onClick={() => handleJoinConsultation(apt)}
+                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 shadow-md shadow-blue-100 ring-2 ring-blue-500/10 group/call"
+                                                title="Start Video Call"
+                                            >
+                                                <Video className="w-4 h-4 group-hover/call:scale-110 transition-transform" />
+                                                <span className="hidden sm:inline">Join Call</span>
+                                            </button>
                                             <button
                                                 onClick={() => handleRescheduleClick(apt)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white rounded-xl text-sm font-bold border border-gray-100 transition-all duration-200 active:scale-95 shadow-sm"
