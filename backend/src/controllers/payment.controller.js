@@ -170,7 +170,13 @@ export const getPaymentHistory = async (req, res) => {
     try {
         const userId = req.user.id;
         const payments = await Payment.find({ userId })
-            .populate('appointmentId')
+            .populate({
+                path: 'appointmentId',
+                populate: {
+                    path: 'doctorId',
+                    select: 'name specialization'
+                }
+            })
             .sort({ createdAt: -1 });
 
         return res.status(200).json({ payments });

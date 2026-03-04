@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, X } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, X, CreditCard } from 'lucide-react';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
     const navItems = [
@@ -7,6 +7,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         { path: '/doctors', label: 'Find Doctors', icon: Users },
         { path: '/appointments', label: 'Appointments', icon: Calendar },
         { path: '/reports', label: 'Reports', icon: FileText },
+        { path: '/payment/history', label: 'Payment History', icon: CreditCard },
         { path: '/chat', label: 'Symptom Chat', icon: MessageSquare },
     ];
 
