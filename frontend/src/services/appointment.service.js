@@ -5,8 +5,14 @@ const getAppointments = async () => {
     return response.data;
 };
 
+const getAppointmentById = async (id) => {
+    const response = await api.get(`/appointments/${id}`);
+    return response.data;
+};
+
 const appointmentService = {
     getAppointments,
+    getAppointmentById,
 
     getTimeslots: async (doctorId, date) => {
         const response = await api.get(`/appointments/timeslots/${doctorId}?date=${date}`);
