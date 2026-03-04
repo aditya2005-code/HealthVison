@@ -19,6 +19,8 @@ import AppointmentBooking from './pages/AppointmentBooking';
 import Appointments from './pages/Appointments';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailure from './pages/PaymentFailure';
+import PaymentHistory from './pages/PaymentHistory';
+import VideoConsultation from './pages/VideoConsultation';
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
             <Route path="appointments" element={<Appointments />} />
             <Route path="payment/success" element={<PaymentSuccess />} />
             <Route path="payment/failure" element={<PaymentFailure />} />
+            <Route path="payment/history" element={<PaymentHistory />} />
+            <Route path="consultation/:roomId" element={<VideoConsultation />} />
             <Route path="*" element={<div className="p-4">404 Not Found</div>} />
           </Route>
         </Route>
