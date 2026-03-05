@@ -61,6 +61,11 @@ const doctorSchema = new mongoose.Schema(
             required: true,
             min: 0,
         },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: false // Optional for compatibility with existing data
+        },
     },
     {
         timestamps: true,

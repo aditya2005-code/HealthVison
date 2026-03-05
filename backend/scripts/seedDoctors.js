@@ -136,6 +136,8 @@ const doctors = [
     }
 ];
 
+import { User } from "../src/models/user.model.js";
+
 const seedDoctors = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
@@ -143,11 +145,48 @@ const seedDoctors = async () => {
 
         // Clear existing data
         await Doctor.deleteMany({});
-        console.log("Cleared existing doctor data.");
+        // Optional: Clear doctor users too? Let's clear users with role 'doctor'
+        await User.deleteMany({ role: "doctor" });
+        console.log("Cleared existing doctor and doctor-user data.");
 
         // Insert new data
-        await Doctor.insertMany(doctors);
-        console.log("Successfully seeded doctor data!");
+        for (const doc of doctors) {
+            // Create a unique clean email: remove "Dr.", trim, lowercase, replace spaces with dots
+            const cleanName = doc.name.replace(/dr\.\s+/i, '').trim().toLowerCase();
+            const email = `${cleanName.split(' ').join('.')}@healthvision.com`;
+
+            // Create a User account for the doctor
+            const user = await User.create({
+                name: {
+                    first: doc.name.split(' ')[1],
+                    last: doc.name.split(' ')[2] || ""
+                },
+                email,
+                password: "doctor123", // Default password for seeded doctors
+                role: "doctor",
+                phone: doc.contact,
+                dateOfBirth: new Date("1980-01-01"), // Default DOB
+                gender: "Male", // Default gender, can be adjusted
+                bloodGroup: "O+",
+                height: 175,
+                weight: 70,
+                emergencyContact: {
+                    name: "Emergency",
+                    phone: doc.contact,
+                    relation: "Colleague"
+                }
+            });
+
+            // Create the Doctor profile linked to the User
+            await Doctor.create({
+                ...doc,
+                userId: user._id
+            });
+
+            console.log(`Seeded: ${doc.name} (Email: ${email})`);
+        }
+
+        console.log("Successfully seeded doctor and user data!");
 
         process.exit(0);
     } catch (error) {
