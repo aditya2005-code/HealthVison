@@ -96,11 +96,19 @@ export const loginUser = async (req, res, next) => {
     }
 
     const token = generateToken(user._id);
+
+    let doctorProfile = null;
+    if (user.role === 'doctor') {
+      const { Doctor } = await import("../models/doctor.model.js");
+      doctorProfile = await Doctor.findOne({ userId: user._id });
+    }
+
     return res.status(200).json({
       message: "User logged in successfully.",
       token,
       user: {
         id: user._id,
+        doctorId: doctorProfile?._id,
         name: user.name,
         email: user.email,
         role: user.role,

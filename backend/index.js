@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import http from 'http';
+import https from 'https';
+import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './src/config/swagger.js';
 import { errorHandler } from './src/middleware/error.middleware.js';
@@ -21,7 +23,18 @@ import { setupSocket } from './src/services/socket.service.js';
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
+let server;
+
+if (process.env.USE_HTTPS === 'true') {
+  const options = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.cert')
+  };
+  server = https.createServer(options, app);
+  console.log('Using HTTPS for server');
+} else {
+  server = http.createServer(app);
+}
 
 // Initialize Socket.io
 setupSocket(server);
@@ -49,6 +62,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 // Routes
 app.get('/', (req, res) => {
   res.send('HealthVision API is running');
+});
+
+app.get('/api', (req, res) => {
+  res.json({ message: 'HealthVision API is running and secure', status: 'success' });
 });
 
 app.use('/api/auth', authRoutes);

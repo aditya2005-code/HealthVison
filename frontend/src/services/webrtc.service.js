@@ -1,26 +1,40 @@
 import { io } from 'socket.io-client';
-import Peer from 'simple-peer';
+import Peer from 'simple-peer-light';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const getSocketURL = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
+    return apiUrl.replace(/\/api$/, '');
+};
+
+const SOCKET_URL = getSocketURL();
 
 class WebRTCService {
     constructor() {
         this.socket = null;
         this.peer = null;
         this.stream = null;
+        this.currentRoomId = null;
     }
 
     connect(userId) {
         if (this.socket) return;
 
-        this.socket = io(SOCKET_URL);
+        this.socket = io(SOCKET_URL, {
+            rejectUnauthorized: false,
+            transports: ['websocket', 'polling'],
+            secure: true
+        });
+
         this.socket.on('connect', () => {
-            console.log('Connected to signaling server');
             this.socket.emit('register', userId);
         });
 
         this.socket.on('connect_error', (error) => {
-            console.error('Socket connection error:', error);
+            console.error('Socket connection error details:', error);
+            // Fallback for self-signed certificates in some browsers
+            if (error.message === 'xhr poll error' || error.message === 'websocket error') {
+                console.log('Attempting reconnection with different options...');
+            }
         });
     }
 
@@ -34,12 +48,14 @@ class WebRTCService {
 
     joinRoom(roomId, appointmentId, userId) {
         if (!this.socket) return;
+        this.currentRoomId = roomId;
         this.socket.emit('join-room', { roomId, appointmentId, userId });
     }
 
     leaveRoom(roomId, userId) {
         if (!this.socket) return;
         this.socket.emit('leave-room', { roomId, userId });
+        this.currentRoomId = null;
         this.destroyPeer();
     }
 
@@ -55,16 +71,31 @@ class WebRTCService {
 
         this.peer = new Peer({
             initiator: isInitiator,
-            trickle: false,
-            stream: stream
+            trickle: true,
+            stream: stream,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' }
+                ]
+            }
         });
 
         this.peer.on('signal', (data) => {
-            onSignal(data);
+            if (data.type === 'offer' || data.type === 'answer') {
+                onSignal(data);
+            } else if (data.candidate) {
+                this.socket.emit('ice-candidate', { roomId: this.currentRoomId, candidate: data });
+            }
         });
 
         this.peer.on('stream', (remoteStream) => {
             onStream(remoteStream);
+        });
+
+        this.peer.on('connect', () => {
+            // P2P Connection established
         });
 
         this.peer.on('close', () => {
@@ -72,7 +103,7 @@ class WebRTCService {
         });
 
         this.peer.on('error', (err) => {
-            console.error('Peer error:', err);
+            console.error('[WebRTC] Peer error:', err);
             onClose();
         });
 
@@ -82,6 +113,8 @@ class WebRTCService {
     signal(data) {
         if (this.peer) {
             this.peer.signal(data);
+        } else {
+            // Peer object is null
         }
     }
 

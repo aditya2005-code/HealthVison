@@ -153,7 +153,28 @@ python main.py
 - Voice and video calls
 - Basic call controls
 
-## 🔄 Development Workflow
+## � Network Testing (Mobile/Other Devices)
+
+To test the application on other devices (like a smartphone) on the same Wi-Fi network:
+
+### 1. Find your Local IP Address
+- **Windows**: Open Command Prompt/PowerShell and type `ipconfig`. Look for `IPv4 Address` under your Wi-Fi adapter (e.g., `10.68.160.126`).
+- **Mac/Linux**: Open Terminal and type `ifconfig` or `ip addr`. Look for the `inet` address under `en0` or `wlan0`.
+
+### 2. Update Environment Variables
+Update the IP address in your `.env` files:
+- **frontend/.env**: `VITE_API_URL=https://<your-ip>:3000/api`
+- **backend/.env**: Update `FRONTEND_URL`, `BACKEND_URL`, and `ML_API_URL` with your IP.
+
+### 3. Authorize SSL (CRITICAL)
+Because the project uses self-signed certificates for HTTPS (required for camera access):
+1. **On EACH device** (PC, Phone, Tablet): Open `https://<your-ip>:5173` and click "Advanced" -> "Proceed".
+2. **On EACH device**: Visit `https://<your-ip>:3000/api` and click "Advanced" -> "Proceed".
+
+> [!IMPORTANT]
+> If you don't visit the `:3000/api` link on every device, the frontend won't be able to communicate with the backend, and you'll see a "Network Error".
+
+## �🔄 Development Workflow
 
 - **Branching Strategy**: Feature-based branching
 - **Code Review**: Pull requests required for merging

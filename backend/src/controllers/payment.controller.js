@@ -77,7 +77,7 @@ const sendConfirmationEmail = async (appointmentId) => {
 export const createPayment = async (req, res) => {
     try {
         const { amount, appointmentId } = req.body;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         const user = await User.findById(userId);
         if (!user) {
@@ -168,7 +168,7 @@ export const verifyPayment = async (req, res) => {
 
 export const getPaymentHistory = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
         const payments = await Payment.find({ userId })
             .populate({
                 path: 'appointmentId',
@@ -188,7 +188,7 @@ export const getPaymentHistory = async (req, res) => {
 
 export const getWalletBalance = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
         const user = await User.findById(userId).select("walletBalance");
 
         if (!user) {
@@ -205,7 +205,7 @@ export const getWalletBalance = async (req, res) => {
 export const walletPayment = async (req, res) => {
     try {
         const { amount, appointmentId } = req.body;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         if (!amount || !appointmentId) {
             return res.status(400).json({ message: "Amount and Appointment ID are required" });

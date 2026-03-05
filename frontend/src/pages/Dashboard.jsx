@@ -67,7 +67,9 @@ export default function Dashboard() {
         appointments.forEach(apt => {
             const date = new Date(apt.date);
             const dayIndex = date.getDay();
-            data[dayIndex].appointments += 1;
+            if (!isNaN(dayIndex) && data[dayIndex]) {
+                data[dayIndex].appointments += 1;
+            }
         });
 
         // Reorder to start from Mon

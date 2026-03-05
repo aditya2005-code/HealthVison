@@ -9,7 +9,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 
 export const createAppointment = asyncHandler(async (req, res) => {
     const { doctorId, date, time } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!doctorId || !date || !time) {
         throw new ApiError(400, "All fields are required");
@@ -57,12 +57,17 @@ export const createAppointment = asyncHandler(async (req, res) => {
 });
 
 export const getAppointments = asyncHandler(async (req, res) => {
-    const appointments = await Appointment.find({
-        $or: [
-            { userId: req.user.id },
-            { doctorId: req.user.id }
-        ]
-    })
+    const user = req.user;
+    let query = { userId: user._id };
+
+    if (user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ userId: user._id });
+        if (doctor) {
+            query = { doctorId: doctor._id };
+        }
+    }
+
+    const appointments = await Appointment.find(query)
         .populate("userId", "name email")
         .populate("doctorId", "name specialization location image");
 
@@ -96,7 +101,16 @@ export const getAppointmentById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Appointment not found");
     }
 
-    if (appointment.userId._id.toString() !== req.user.id) {
+    // Role-based authorization
+    let isAuthorized = appointment.userId._id.toString() === req.user._id.toString();
+    if (!isAuthorized && req.user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ userId: req.user._id });
+        if (doctor && appointment.doctorId._id.toString() === doctor._id.toString()) {
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
         throw new ApiError(403, "Unauthorized to access this appointment");
     }
 
@@ -113,7 +127,15 @@ export const updateAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Appointment not found");
     }
 
-    if (appointment.userId._id.toString() !== req.user.id) {
+    let isAuthorized = appointment.userId.toString() === req.user._id.toString();
+    if (!isAuthorized && req.user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ userId: req.user._id });
+        if (doctor && appointment.doctorId.toString() === doctor._id.toString()) {
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
         throw new ApiError(403, "Unauthorized to update this appointment");
     }
 
@@ -134,7 +156,15 @@ export const deleteAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Appointment not found");
     }
 
-    if (appointment.userId._id.toString() !== req.user.id) {
+    let isAuthorized = appointment.userId.toString() === req.user._id.toString();
+    if (!isAuthorized && req.user.role === 'doctor') {
+        const doctor = await Doctor.findOne({ userId: req.user._id });
+        if (doctor && appointment.doctorId.toString() === doctor._id.toString()) {
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
         throw new ApiError(403, "Unauthorized to delete this appointment");
     }
 
@@ -248,13 +278,13 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Appointment not found");
     }
 
-    if (appointment.userId._id.toString() !== req.user.id) {
+    if (appointment.userId._id.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "Unauthorized to cancel this appointment");
     }
 
     let message = "Appointment cancelled successfully";
     if (appointment.paymentStatus === "Paid") {
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user._id);
         const doctor = await Doctor.findById(appointment.doctorId);
         if (user && doctor) {
             const fee = doctor.fee || 500;
@@ -271,7 +301,7 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
     // Send cancellation email (async, don't block response)
     const sendCancellationEmail = async () => {
         try {
-            const user = await User.findById(req.user.id);
+            const user = await User.findById(req.user._id);
             const doctor = await Doctor.findById(appointment.doctorId);
 
             const emailHtml = `
@@ -357,7 +387,7 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Appointment not found");
     }
 
-    if (appointment.userId._id.toString() !== req.user.id && appointment.userId.toString() !== req.user.id) {
+    if (appointment.userId._id.toString() !== req.user._id.toString() && appointment.userId.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "Unauthorized to reschedule this appointment");
     }
 
@@ -407,7 +437,7 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
     // 5. Send rescheduling confirmation email (async)
     const sendRescheduleEmail = async () => {
         try {
-            const user = await User.findById(req.user.id);
+            const user = await User.findById(req.user._id);
             const doctor = await Doctor.findById(appointment.doctorId);
 
             const emailHtml = `
