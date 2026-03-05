@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw,
 import appointmentService from '../services/appointment.service';
 import RescheduleModal from '../components/Appointment/RescheduleModal';
 import paymentService from '../services/payment.service';
+import authService from '../services/auth.service';
 import toast from 'react-hot-toast';
 
 const Appointments = () => {
@@ -15,6 +16,8 @@ const Appointments = () => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
     const [walletBalance, setWalletBalance] = useState(0);
+    const user = authService.getCurrentUser();
+    const isDoctor = user?.role === 'doctor';
 
     useEffect(() => {
         fetchAppointments();
@@ -22,6 +25,7 @@ const Appointments = () => {
     }, []);
 
     const fetchBalance = async () => {
+        if (isDoctor) return;
         try {
             const response = await paymentService.getWalletBalance();
             setWalletBalance(response.balance || 0);
@@ -34,17 +38,17 @@ const Appointments = () => {
         try {
             setLoading(true);
             const response = await appointmentService.getAppointments();
-            const data = response.data || response;
+            const data = response.data || (Array.isArray(response) ? response : []);
 
             // Sort chronologically (soonest or most recent first)
-            const sortedData = [...data].sort((a, b) => {
+            const sortedData = Array.isArray(data) ? [...data].sort((a, b) => {
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
                 if (dateA - dateB !== 0) {
                     return filter === 'Past' ? dateB - dateA : dateA - dateB;
                 }
                 return filter === 'Past' ? b.time.localeCompare(a.time) : a.time.localeCompare(b.time);
-            });
+            }) : [];
 
             setAppointments(sortedData);
         } catch (err) {
@@ -170,16 +174,18 @@ const Appointments = () => {
                     <p className="text-gray-500 mt-1">Manage and track your healthcare consultations</p>
                 </div>
 
-                {/* Wallet Balance Chip */}
-                <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
-                        <Wallet className="w-5 h-5" />
+                {/* Wallet Balance Chip - Hidden for doctors */}
+                {!isDoctor && (
+                    <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                            <Wallet className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Your Balance</p>
+                            <p className="text-lg font-black text-gray-900 leading-none">₹{walletBalance.toLocaleString()}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Your Balance</p>
-                        <p className="text-lg font-black text-gray-900 leading-none">₹{walletBalance.toLocaleString()}</p>
-                    </div>
-                </div>
+                )}
             </div>
 
             {error && (
@@ -237,7 +243,9 @@ const Appointments = () => {
                                 <div className="flex items-center gap-5 z-10">
                                     <div className="relative">
                                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-blue-600 font-extrabold text-2xl shadow-inner border border-white">
-                                            {apt.doctorId?.name?.charAt(0) || 'D'}
+                                            {isDoctor
+                                                ? (apt.userId?.name?.first?.charAt(0) || 'P')
+                                                : (apt.doctorId?.name?.charAt(0) || 'D')}
                                         </div>
                                         <div className={`absolute -bottom-1 -right-1 p-1 rounded-lg border-2 border-white shadow-sm ${style.bg} ${style.text}`}>
                                             {style.icon}
@@ -245,19 +253,21 @@ const Appointments = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors leading-tight">
-                                            {apt.doctorId?.name || 'Unknown Doctor'}
+                                            {isDoctor
+                                                ? (apt.userId?.name ? `${apt.userId.name.first} ${apt.userId.name.last}` : 'Unknown Patient')
+                                                : (apt.doctorId?.name || 'Unknown Doctor')}
                                         </h3>
                                         <p className="text-blue-600 text-sm font-bold tracking-wide uppercase opacity-80 decoration-slice">
-                                            {apt.doctorId?.specialization || 'General'}
+                                            {isDoctor ? 'Patient Consultation' : (apt.doctorId?.specialization || 'General')}
                                         </p>
                                         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2.5">
                                             <div className="flex items-center gap-1.5 text-sm text-gray-500 font-medium">
                                                 <Calendar className="w-4 h-4 text-blue-500/70" />
-                                                {new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {apt.date ? new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
                                             </div>
                                             <div className="flex items-center gap-1.5 text-sm text-gray-500 font-medium">
                                                 <Clock className="w-4 h-4 text-blue-500/70" />
-                                                {apt.time}
+                                                {apt.time || 'N/A'}
                                             </div>
                                         </div>
                                     </div>
@@ -278,14 +288,16 @@ const Appointments = () => {
                                                 <Video className="w-4 h-4 group-hover/call:scale-110 transition-transform" />
                                                 <span className="hidden sm:inline">Join Call</span>
                                             </button>
-                                            <button
-                                                onClick={() => handleRescheduleClick(apt)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white rounded-xl text-sm font-bold border border-gray-100 transition-all duration-200 active:scale-95 shadow-sm"
-                                                title="Reschedule"
-                                            >
-                                                <RefreshCcw className="w-4 h-4" />
-                                                <span className="hidden sm:inline">Reschedule</span>
-                                            </button>
+                                            {!isDoctor && (
+                                                <button
+                                                    onClick={() => handleRescheduleClick(apt)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white rounded-xl text-sm font-bold border border-gray-100 transition-all duration-200 active:scale-95 shadow-sm"
+                                                    title="Reschedule"
+                                                >
+                                                    <RefreshCcw className="w-4 h-4" />
+                                                    <span className="hidden sm:inline">Reschedule</span>
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => handleCancel(apt._id)}
                                                 className="p-2 bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-xl border border-gray-100 transition-all active:scale-95 shadow-sm"

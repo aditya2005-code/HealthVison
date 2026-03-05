@@ -1,7 +1,11 @@
-import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import authService from '../../services/auth.service';
 
 const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
+    const navigate = useNavigate();
+    const userRole = authService.getCurrentUser()?.role;
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'Scheduled':
@@ -35,7 +39,9 @@ const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
                 <table className="w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {userRole === 'doctor' ? 'Patient' : 'Doctor'}
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
@@ -51,8 +57,12 @@ const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
                                                 <User className="w-4 h-4" />
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{apt.doctorName || 'Smith'}</div>
-                                                <div className="text-sm text-gray-500">{apt.specialization || 'Cardiologist'}</div>
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {userRole === 'doctor' ? (apt.patientName || 'Patient') : (apt.doctorName || 'Doctor')}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {userRole === 'doctor' ? 'Consultation' : (apt.specialization || 'General')}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -76,20 +86,31 @@ const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         {(apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Pending') ? (
-                                            <>
+                                            <div className="flex items-center space-x-3">
                                                 <button
-                                                    onClick={() => onReschedule && onReschedule(apt)}
-                                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                                    onClick={() => navigate(`/consultation/${apt.id || apt._id}`)}
+                                                    className="flex items-center text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded-lg transition-colors"
                                                 >
-                                                    Reschedule
+                                                    <Video className="w-4 h-4 mr-1" />
+                                                    Join Call
                                                 </button>
-                                                <button
-                                                    onClick={() => onCancel && onCancel(apt.id || apt._id)}
-                                                    className="text-red-600 hover:text-red-900"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </>
+                                                {userRole !== 'doctor' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => onReschedule && onReschedule(apt)}
+                                                            className="text-gray-600 hover:text-gray-900"
+                                                        >
+                                                            Reschedule
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onCancel && onCancel(apt.id || apt._id)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         ) : (
                                             <span className="text-gray-400 italic">No actions available</span>
                                         )}
