@@ -80,14 +80,17 @@ export default function VideoConsultation() {
                 webrtcService.joinRoom(roomId, appointmentId, userId);
 
                 webrtcService.onUserJoined(({ userId: joinedUserId }) => {
-                    console.log('Other user joined:', joinedUserId);
                     webrtcService.initializePeer(
                         true,
                         stream,
-                        (offer) => webrtcService.emitOffer(roomId, offer),
+                        (offer) => {
+                            webrtcService.emitOffer(roomId, offer);
+                        },
                         (rStream) => {
                             setRemoteStream(rStream);
-                            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = rStream;
+                            if (remoteVideoRef.current) {
+                                remoteVideoRef.current.srcObject = rStream;
+                            }
                             setIsConnecting(false);
                         },
                         handleCallEnd
@@ -95,14 +98,17 @@ export default function VideoConsultation() {
                 });
 
                 webrtcService.onOffer(({ offer }) => {
-                    console.log('Received offer');
                     webrtcService.initializePeer(
                         false,
                         stream,
-                        (answer) => webrtcService.emitAnswer(roomId, answer),
+                        (answer) => {
+                            webrtcService.emitAnswer(roomId, answer);
+                        },
                         (rStream) => {
                             setRemoteStream(rStream);
-                            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = rStream;
+                            if (remoteVideoRef.current) {
+                                remoteVideoRef.current.srcObject = rStream;
+                            }
                             setIsConnecting(false);
                         },
                         handleCallEnd
@@ -111,8 +117,11 @@ export default function VideoConsultation() {
                 });
 
                 webrtcService.onAnswer(({ answer }) => {
-                    console.log('Received answer');
                     webrtcService.signal(answer);
+                });
+
+                webrtcService.onIceCandidate(({ candidate }) => {
+                    webrtcService.signal(candidate);
                 });
 
                 webrtcService.onUserLeft(() => {
@@ -187,6 +196,24 @@ export default function VideoConsultation() {
         }
     };
 
+    // Reactive stream assignment
+    useEffect(() => {
+        if (remoteStream && remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+            // Ensure video attempts to play
+            remoteVideoRef.current.play().catch(e => {
+                // Auto-play prevented
+            });
+        }
+    }, [remoteStream]);
+
+    // Same for local stream to be extra safe
+    useEffect(() => {
+        if (localStream && localVideoRef.current) {
+            localVideoRef.current.srcObject = localStream;
+        }
+    }, [localStream]);
+
     return (
         <div className="fixed inset-0 bg-gray-900 flex flex-col z-50 overflow-hidden">
             {/* Header */}
@@ -211,16 +238,16 @@ export default function VideoConsultation() {
 
             {/* Video Grid */}
             <div className="flex-1 relative p-4 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr max-h-[calc(100vh-160px)]">
-                {/* Remote Video (Doctor/Patient) */}
+                {/* Remote Video Container */}
                 <div className="relative bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex items-center justify-center">
-                    {remoteStream ? (
-                        <video
-                            ref={remoteVideoRef}
-                            autoPlay
-                            playsInline
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className={`w-full h-full object-cover bg-black ${!remoteStream ? 'hidden' : ''}`}
+                    />
+
+                    {!remoteStream && (
                         <div className="text-center">
                             <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-700">
                                 <User className="w-10 h-10 text-gray-600" />
@@ -230,12 +257,13 @@ export default function VideoConsultation() {
                             </p>
                         </div>
                     )}
+
                     <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-sm font-medium border border-white/10 uppercase tracking-wider">
                         {doctorName}
                     </div>
                 </div>
 
-                {/* Local Video */}
+                {/* Local Video Container */}
                 <div className="relative bg-black rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex items-center justify-center">
                     <video
                         ref={localVideoRef}

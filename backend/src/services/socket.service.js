@@ -4,8 +4,12 @@ import { Consultation } from "../models/consultation.model.js";
 export const setupSocket = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: "*", // Adjust in production
-            methods: ["GET", "POST"]
+            origin: [
+                process.env.FRONTEND_URL,
+                "https://localhost:5173"
+            ].filter(Boolean),
+            methods: ["GET", "POST"],
+            credentials: true
         }
     });
 
@@ -13,16 +17,12 @@ export const setupSocket = (server) => {
     const users = new Map();
 
     io.on("connection", (socket) => {
-        console.log(`User connected: ${socket.id}`);
-
         socket.on("register", (userId) => {
             users.set(userId, socket.id);
-            console.log(`User ${userId} registered with socket ${socket.id}`);
         });
 
         socket.on("join-room", async ({ roomId, appointmentId, userId }) => {
             socket.join(roomId);
-            console.log(`User ${userId} joined room ${roomId}`);
 
             // Update/Create consultation status
             try {
@@ -57,12 +57,10 @@ export const setupSocket = (server) => {
 
         socket.on("leave-room", ({ roomId, userId }) => {
             socket.leave(roomId);
-            console.log(`User ${userId} left room ${roomId}`);
             socket.to(roomId).emit("user-left", { userId });
         });
 
         socket.on("disconnect", () => {
-            console.log(`User disconnected: ${socket.id}`);
             // Find and remove user from users map
             for (const [userId, socketId] of users.entries()) {
                 if (socketId === socket.id) {
