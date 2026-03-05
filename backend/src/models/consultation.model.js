@@ -33,6 +33,5 @@ const consultationSchema = new mongoose.Schema(
 
 // Index for performance
 consultationSchema.index({ appointmentId: 1 });
-consultationSchema.index({ roomId: 1 });
 
 export const Consultation = mongoose.model("Consultation", consultationSchema);
