@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Layout from './layouts/Layout';
 import AuthLayout from './layouts/AuthLayout';
 import Dashboard from './pages/Dashboard';
+import DoctorDashboard from './pages/Doctors/DoctorDashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -21,6 +22,12 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailure from './pages/PaymentFailure';
 import PaymentHistory from './pages/PaymentHistory';
 import VideoConsultation from './pages/VideoConsultation';
+import authService from './services/auth.service';
+
+const DashboardWrapper = () => {
+  const user = authService.getCurrentUser();
+  return user?.role === 'doctor' ? <DoctorDashboard /> : <Dashboard />;
+};
 
 function App() {
   return (
@@ -41,7 +48,7 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<DashboardWrapper />} />
             <Route path="reports/upload" element={<ReportUpload />} />
             <Route path="reports" element={<Reports />} />
             <Route path="reports/:id" element={<ReportAnalysis />} />

@@ -1,14 +1,19 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, X, CreditCard } from 'lucide-react';
+import authService from '../services/auth.service';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
+    const userRole = authService.getCurrentUser()?.role;
+
     const navItems = [
         { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-        { path: '/doctors', label: 'Find Doctors', icon: Users },
-        { path: '/appointments', label: 'Appointments', icon: Calendar },
-        { path: '/reports', label: 'Reports', icon: FileText },
-        { path: '/payment/history', label: 'Payment History', icon: CreditCard },
-        { path: '/chat', label: 'Symptom Chat', icon: MessageSquare },
+        ...(userRole !== 'doctor' ? [
+            { path: '/doctors', label: 'Find Doctors', icon: Users },
+            { path: '/reports', label: 'Reports', icon: FileText },
+            { path: '/payment/history', label: 'Payment History', icon: CreditCard },
+            { path: '/chat', label: 'Symptom Chat', icon: MessageSquare },
+        ] : []),
+        { path: '/appointments', label: userRole === 'doctor' ? 'Assigned' : 'Appointments', icon: Calendar },
     ];
 
     const toggleClass = isOpen ? 'translate-x-0' : '-translate-x-full';
