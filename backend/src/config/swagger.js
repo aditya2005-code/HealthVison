@@ -10,8 +10,8 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:3000/api',
-                description: 'Local server',
+                url: `${process.env.BACKEND_URL || 'https://localhost:3000'}/api`,
+                description: 'Development server',
             },
         ],
     },
