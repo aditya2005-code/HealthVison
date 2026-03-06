@@ -190,6 +190,11 @@ If you see a "Report Not Found" error when visiting `http://localhost:5173/repor
 - **Cause**: The URL `/reports/analysis` tries to load a report with the ID "analysis", which does not exist.
 - **Solution**: Use the correct URL format: `/reports/:reportId` (e.g., `/reports/65d4...`). You can navigate to specific reports from the **Reports** page or **Dashboard**.
 
+#### 2. Duplicate Backend Logs in Development
+In the backend console, you may notice that every request from the frontend is logged twice.
+- **Cause**: The frontend is running in **React Strict Mode** (enabled in `frontend/src/main.jsx`). In development, React intentionally mounts components twice to help identify side effects, which triggers duplicate API calls.
+- **Note**: This behavior is restricted to the development environment and will not occur in the production build.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
