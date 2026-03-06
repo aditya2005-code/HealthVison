@@ -23,7 +23,8 @@ export const getCurrentUser=async(req,res,next)=>{
                 medicalHistory:user.medicalHistory,
                 currentMedications:user.currentMedications,
                 emergencyContact:user.emergencyContact,
-                insurance:user.insurance
+                insurance:user.insurance,
+                avatarUrl:user.avatarUrl
             }
         });
     } catch (error) {

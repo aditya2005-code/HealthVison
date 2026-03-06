@@ -93,6 +93,10 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     },
+    avatarUrl: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       enum: ["Admitted", "Discharged", "Outpatient", "Emergency"],

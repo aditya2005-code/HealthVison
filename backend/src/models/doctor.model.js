@@ -66,6 +66,10 @@ const doctorSchema = new mongoose.Schema(
             ref: "User",
             required: false // Optional for compatibility with existing data
         },
+        avatarUrl: {
+            type: String,
+            required: false,
+        },
     },
     {
         timestamps: true,

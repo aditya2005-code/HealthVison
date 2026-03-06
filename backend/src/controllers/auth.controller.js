@@ -2,6 +2,8 @@ import { User } from "../models/user.model.js";
 import { generateToken } from "../utils/generateToken.js";
 import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
+import imagekit from "../utils/imagekit.js";
+import ImageKit from "imagekit";
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -22,6 +24,7 @@ export const registerUser = async (req, res, next) => {
       currentMedications,
       emergencyContact,
       insurance,
+      avatarUrl
     } = req.body;
 
     // Validation is now handled by middleware
@@ -30,7 +33,15 @@ export const registerUser = async (req, res, next) => {
     if (emailExists) {
       return res.status(409).json({ message: "User already exists." });
     }
-
+    let uploadedAvaratUrl=null;
+    if(avatarUrl){
+      const uploadImage=await imagekit.upload({
+        file:avatarUrl,
+        fileName:`${name}_avatar.jpg`,
+        folder:"/avatars"
+      })
+      uploadedAvaratUrl=uploadImage.url;
+    }
     const user = await User.create({
       name,
       email,
@@ -48,6 +59,7 @@ export const registerUser = async (req, res, next) => {
       currentMedications,
       emergencyContact,
       insurance,
+      avatarUrl:uploadedAvaratUrl
     });
 
     const token = generateToken(user._id);
@@ -71,7 +83,8 @@ export const registerUser = async (req, res, next) => {
         medicalHistory: user.medicalHistory,
         currentMedications: user.currentMedications,
         emergencyContact: user.emergencyContact,
-        insurance: user.insurance
+        insurance: user.insurance,
+        avatarUrl:user.avatarUrl
       },
     });
   } catch (error) {
@@ -123,7 +136,8 @@ export const loginUser = async (req, res, next) => {
         medicalHistory: user.medicalHistory,
         currentMedications: user.currentMedications,
         emergencyContact: user.emergencyContact,
-        insurance: user.insurance
+        insurance: user.insurance,
+        avatarUrl:user.avatarUrl
       },
     });
   } catch (error) {
