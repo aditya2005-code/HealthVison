@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw, Filter, ChevronRight, Wallet, Video } from 'lucide-react';
+import Avatar from '../components/ui/Avatar';
 import appointmentService from '../services/appointment.service';
 import RescheduleModal from '../components/Appointment/RescheduleModal';
 import paymentService from '../services/payment.service';
@@ -242,11 +243,12 @@ const Appointments = () => {
 
                                 <div className="flex items-center gap-5 z-10">
                                     <div className="relative">
-                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-blue-600 font-extrabold text-2xl shadow-inner border border-white">
-                                            {isDoctor
-                                                ? (apt.userId?.name?.first?.charAt(0) || 'P')
-                                                : (apt.doctorId?.name?.charAt(0) || 'D')}
-                                        </div>
+                                        <Avatar
+                                            src={isDoctor ? apt.userId?.image : apt.doctorId?.image}
+                                            alt={isDoctor ? "Patient" : "Doctor"}
+                                            className="w-14 h-14 border border-white"
+                                            iconSize="w-7 h-7"
+                                        />
                                         <div className={`absolute -bottom-1 -right-1 p-1 rounded-lg border-2 border-white shadow-sm ${style.bg} ${style.text}`}>
                                             {style.icon}
                                         </div>
