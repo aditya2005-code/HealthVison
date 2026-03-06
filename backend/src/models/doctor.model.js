@@ -72,4 +72,9 @@ const doctorSchema = new mongoose.Schema(
     }
 );
 
+// Add indexes for optimization
+doctorSchema.index({ specialization: 1 });
+doctorSchema.index({ location: 1 });
+doctorSchema.index({ userId: 1 });
+
 export const Doctor = mongoose.model("Doctor", doctorSchema);
