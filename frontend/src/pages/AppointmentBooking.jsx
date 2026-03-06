@@ -7,6 +7,7 @@ import BookingConfirmation from '../components/Appointment/BookingConfirmation';
 import appointmentService from '../services/appointment.service';
 import paymentService from '../services/payment.service';
 import authService from '../services/auth.service';
+import { loadRazorpayScript } from '../utils/scriptLoader';
 import toast from 'react-hot-toast';
 
 const AppointmentBooking = () => {
@@ -17,6 +18,7 @@ const AppointmentBooking = () => {
     const [loading, setLoading] = useState(false);
     const [walletBalance, setWalletBalance] = useState(0);
     const [useWallet, setUseWallet] = useState(false);
+    const [createdAppointmentId, setCreatedAppointmentId] = useState(null);
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -41,6 +43,7 @@ const AppointmentBooking = () => {
     };
 
     const handleConfirmBooking = async () => {
+        if (loading) return;
         try {
             setLoading(true);
             const fee = selectedDoctor.fee || selectedDoctor.fees || 500;
@@ -59,9 +62,14 @@ const AppointmentBooking = () => {
                 status: 'confirmed'
             };
 
-            // 1. Create Appointment
-            const appointmentRes = await appointmentService.bookAppointment(bookingData);
-            const appointmentId = appointmentRes.data?._id;
+            // 1. Create Appointment (only if not already created)
+            let appointmentId = createdAppointmentId;
+
+            if (!appointmentId) {
+                const appointmentRes = await appointmentService.bookAppointment(bookingData);
+                appointmentId = appointmentRes.data?._id;
+                setCreatedAppointmentId(appointmentId);
+            }
 
             if (!appointmentId) {
                 throw new Error("Failed to retrieve appointment ID");
@@ -75,6 +83,13 @@ const AppointmentBooking = () => {
                 navigate('/payment/success');
             } else {
                 // 2b. Razorpay Flow
+                const res = await loadRazorpayScript();
+                if (!res) {
+                    toast.error("Failed to load payment gateway. Please check your connection.");
+                    setLoading(false);
+                    return;
+                }
+
                 const paymentRes = await paymentService.createPayment(fee, appointmentId);
                 const order = paymentRes.order;
 
@@ -105,8 +120,21 @@ const AppointmentBooking = () => {
                         email: authService.getCurrentUser()?.email || "patient@example.com",
                         contact: authService.getCurrentUser()?.phone || "9999999999"
                     },
-                    theme: { color: "#2563eb" }
+                    theme: { color: "#2563eb" },
+                    modal: {
+                        ondismiss: function () {
+                            setLoading(false);
+                        }
+                    }
                 };
+
+                if (typeof window.Razorpay !== 'function') {
+                    // One last attempt to load if somehow undefined
+                    const retry = await loadRazorpayScript();
+                    if (!retry || typeof window.Razorpay !== 'function') {
+                        throw new Error("Razorpay SDK could not be initialized. Please refresh and try again.");
+                    }
+                }
 
                 const rzp = new window.Razorpay(options);
                 rzp.on('payment.failed', function (response) {

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Upload, RefreshCw, AlertCircle } from 'lucide-react';
 import ReportCard from '../components/ReportCard';
 import reportService from '../services/report.service';
+import LoadingSkeleton from '../components/ui/LoadingSkeleton';
+import ErrorState from '../components/ui/ErrorState';
 import toast from 'react-hot-toast';
 
 const Reports = () => {
@@ -70,14 +72,34 @@ const Reports = () => {
         }
     };
 
-    if (loading) {
+    if (loading && reports.length === 0) {
         return (
-            <div className="max-w-6xl mx-auto">
-                <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading your reports...</p>
+            <div className="max-w-6xl mx-auto px-4">
+                <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-2">
+                        <LoadingSkeleton width="200px" height="32px" />
+                        <LoadingSkeleton width="300px" height="20px" />
                     </div>
+                    <div className="flex gap-3">
+                        <LoadingSkeleton width="120px" height="40px" />
+                        <LoadingSkeleton width="150px" height="40px" />
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 space-y-4">
+                            <div className="flex justify-between">
+                                <LoadingSkeleton width="40px" height="40px" variant="circular" />
+                                <LoadingSkeleton width="80px" height="24px" />
+                            </div>
+                            <LoadingSkeleton width="70%" height="24px" />
+                            <LoadingSkeleton width="50%" height="16px" />
+                            <div className="flex gap-2 pt-2">
+                                <LoadingSkeleton width="80%" height="40px" />
+                                <LoadingSkeleton width="20%" height="40px" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
@@ -86,9 +108,9 @@ const Reports = () => {
     return (
         <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">My Reports</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-1">My Reports</h1>
                     <p className="text-gray-600">
                         Manage and analyze your medical reports
                     </p>
@@ -112,23 +134,7 @@ const Reports = () => {
             </div>
 
             {/* Error State */}
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-                    <div className="flex items-start">
-                        <AlertCircle className="w-6 h-6 text-red-600 mt-1 mr-3" />
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-1">Error Loading Reports</h3>
-                            <p className="text-gray-600">{error}</p>
-                            <button
-                                onClick={fetchReports}
-                                className="mt-3 text-red-600 hover:text-red-700 font-medium"
-                            >
-                                Try Again
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {error && <ErrorState message={error} onRetry={fetchReports} className="mb-8" />}
 
             {/* Reports List */}
             {!error && reports.length === 0 ? (

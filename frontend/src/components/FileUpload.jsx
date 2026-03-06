@@ -89,9 +89,9 @@ const FileUpload = ({ onFileSelect, selectedFile, onRemove }) => {
         <div className="w-full">
             {!selectedFile ? (
                 <div
-                    className={`relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${isDragging
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                    className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-12 text-center cursor-pointer transition-all ${isDragging
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-400 hover:bg-gray-50 shadow-inner bg-gray-50/30'
                         }`}
                     onDragEnter={handleDragEnter}
                     onDragLeave={handleDragLeave}

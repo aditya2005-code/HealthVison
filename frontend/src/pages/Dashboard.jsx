@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Activity, Calendar, FileText, MessageSquare, Search, PlusCircle, TrendingUp, Wallet } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, ArrowRight, Activity, TrendingUp, Search, Plus, Filter, MoreVertical, FileText, MessageSquare, PlusCircle, Wallet } from 'lucide-react';
+import Avatar from '../components/ui/Avatar';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import authService from '../services/auth.service';
@@ -222,8 +223,8 @@ export default function Dashboard() {
                                     <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
                                     Appointment Trends
                                 </h3>
-                                <div className="h-64">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-64 w-full relative">
+                                    <ResponsiveContainer width="99%" height={250}>
                                         <BarChart data={appointmentData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                             <XAxis dataKey="name" axisLine={false} tickLine={false} />
@@ -243,8 +244,8 @@ export default function Dashboard() {
                                     <Activity className="w-5 h-5 mr-2 text-green-600" />
                                     Health Activity
                                 </h3>
-                                <div className="h-64">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-64 w-full relative">
+                                    <ResponsiveContainer width="99%" height={250}>
                                         <LineChart data={appointmentData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                             <XAxis dataKey="name" axisLine={false} tickLine={false} />
@@ -314,8 +315,13 @@ export default function Dashboard() {
                             <div className="space-y-4">
                                 {stats.appointments.total > 0 ? (
                                     <div className="flex items-start">
-                                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 mr-3"></div>
-                                        <div>
+                                        <Avatar
+                                            src={user?.profilePicture}
+                                            alt={user?.name?.first}
+                                            className="w-10 h-10"
+                                            iconSize="w-5 h-5"
+                                        />
+                                        <div className="ml-3">
                                             <p className="text-sm text-gray-800 font-medium">You have {stats.appointments.total} appointments</p>
                                             <p className="text-xs text-gray-500">Check appointment history</p>
                                         </div>
