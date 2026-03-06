@@ -19,6 +19,9 @@ import paymentRoutes from './src/routes/payment.routes.js';
 import webrtcRoutes from './src/routes/webrtc.routes.js';
 import { webhookController } from './src/controllers/payment.controller.js';
 import { setupSocket } from './src/services/socket.service.js';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import logger from './src/utils/logger.js';
 
 dotenv.config();
 
@@ -39,22 +42,59 @@ if (process.env.USE_HTTPS === 'true') {
 // Initialize Socket.io
 setupSocket(server);
 
+// Custom NoSQL Injection Sanitizer (Express 5 compatible)
+const nosqlSanitizer = (req, res, next) => {
+  const sanitize = (obj) => {
+    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+      Object.keys(obj).forEach(key => {
+        if (key.startsWith('$')) {
+          logger.warn(`NoSQL injection attempt detected and sanitized: ${key}`);
+          delete obj[key];
+        } else {
+          sanitize(obj[key]);
+        }
+      });
+    }
+  };
+
+  if (req.body) sanitize(req.body);
+  if (req.query) sanitize(req.query);
+  if (req.params) sanitize(req.params);
+  next();
+};
+
 // Middleware
 app.use(cors());
+app.use(helmet());
+app.use(nosqlSanitizer);
 app.use(express.json());
 
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
+// Custom Morgan token for browser detection
+morgan.token('browser', (req) => {
+  const ua = req.headers['user-agent'] || '';
+  const secChUa = req.headers['sec-ch-ua'] || '';
+  const gpc = req.headers['sec-gpc'] || '';
+
+  // Detect browser type
+  if (ua.includes('Brave') || secChUa.includes('Brave') || gpc === '1') return 'Brave';
+  if (ua.includes('Edg/') || secChUa.includes('Edge')) return 'Edge';
+  if (ua.includes('Chrome/') || secChUa.includes('Chrome')) return 'Chrome';
+  if (ua.includes('Safari/') && !ua.includes('Chrome/')) return 'Safari';
+  if (ua.includes('Firefox/')) return 'Firefox';
+  if (ua.includes('MSIE') || ua.includes('Trident/')) return 'IE';
+  return 'Other';
 });
+
+// Logging middleware
+app.use(morgan(':remote-addr :method :url :status :browser', { stream: { write: message => logger.info(message.trim()) } }));
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/healthvision';
 
 // Database Connection
 mongoose.connect(MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch((err) => console.error('MongoDB Connection Error:', err));
+  .then(() => logger.info('MongoDB Connected'))
+  .catch((err) => logger.error('MongoDB Connection Error: %o', err));
 
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
@@ -91,6 +131,6 @@ app.use(errorHandler);
 
 // Server
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
 });
 

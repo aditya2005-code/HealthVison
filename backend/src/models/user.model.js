@@ -128,6 +128,10 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Add indexes for optimization
+userSchema.index({ role: 1 });
+userSchema.index({ phone: 1 });
+
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
