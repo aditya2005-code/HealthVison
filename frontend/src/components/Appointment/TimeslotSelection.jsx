@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import appointmentService from '../../services/appointment.service';
+import LoadingSkeleton from '../ui/LoadingSkeleton';
+import ErrorState from '../ui/ErrorState';
 
 const TimeslotSelection = ({ doctorId, onSelect, selectedSlot }) => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -89,8 +91,8 @@ const TimeslotSelection = ({ doctorId, onSelect, selectedSlot }) => {
                             key={day.date}
                             onClick={() => setSelectedDate(day.date)}
                             className={`flex flex-col items-center min-w-[70px] p-3 rounded-xl border transition-all ${selectedDate === day.date
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
                                 }`}
                         >
                             <span className="text-xs font-medium opacity-80">{day.dayName}</span>
@@ -117,15 +119,15 @@ const TimeslotSelection = ({ doctorId, onSelect, selectedSlot }) => {
                 </h3>
 
                 {loading ? (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 animate-pulse">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                            <div key={i} className="h-10 bg-gray-200 rounded-lg"></div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
+                            <LoadingSkeleton key={i} height="40px" className="rounded-lg" />
                         ))}
                     </div>
                 ) : error ? (
-                    <div className="text-red-500 bg-red-50 p-3 rounded-lg text-sm">{error}</div>
+                    <ErrorState message={error} onRetry={fetchTimeslots} />
                 ) : timeslots.length === 0 ? (
-                    <div className="text-gray-500 bg-gray-50 p-4 rounded-lg text-center">
+                    <div className="text-gray-500 bg-gray-50 p-6 rounded-xl text-center border border-dashed border-gray-300">
                         No slots available for this date.
                     </div>
                 ) : (
@@ -136,10 +138,10 @@ const TimeslotSelection = ({ doctorId, onSelect, selectedSlot }) => {
                                 disabled={!slot.isAvailable}
                                 onClick={() => onSelect({ date: selectedDate, time: slot.time })}
                                 className={`py-2 px-1 rounded-lg text-sm font-medium transition-all ${!slot.isAvailable
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed decoration-slice'
-                                        : selectedSlot?.time === slot.time && selectedSlot?.date === selectedDate
-                                            ? 'bg-blue-600 text-white shadow-md transform scale-105'
-                                            : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed decoration-slice'
+                                    : selectedSlot?.time === slot.time && selectedSlot?.date === selectedDate
+                                        ? 'bg-blue-600 text-white shadow-md transform scale-105'
+                                        : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
                                     }`}
                             >
                                 {slot.time}

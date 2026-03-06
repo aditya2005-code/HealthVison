@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, MapPin, User, CheckCircle, Wallet } from 'lucide-react';
+import Avatar from '../ui/Avatar';
 
 const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBalance, useWallet, setUseWallet }) => {
     if (!doctor || !date || !time) return null;
@@ -23,15 +24,12 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
                     {/* Doctor Info */}
                     <div className="flex-1 w-full bg-blue-50/50 p-6 rounded-xl border border-blue-100">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
-                                {doctor.image ? (
-                                    <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600">
-                                        <User className="w-8 h-8" />
-                                    </div>
-                                )}
-                            </div>
+                            <Avatar
+                                src={doctor.image}
+                                alt={doctor.name}
+                                className="w-16 h-16 border-2 border-white shadow-sm"
+                                iconSize="w-8 h-8"
+                            />
                             <div>
                                 <h3 className="font-bold text-gray-900 text-lg">{doctor.name}</h3>
                                 <p className="text-blue-600 font-medium">{doctor.specialization}</p>
@@ -112,8 +110,8 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
                         onClick={onConfirm}
                         disabled={loading}
                         className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center ${useWallet
-                                ? (walletBalance >= (doctor.fee || doctor.fees || 500) ? 'bg-green-600 hover:bg-green-700 shadow-green-200 text-white' : 'bg-gray-400 cursor-not-allowed text-white')
-                                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white'
+                            ? (walletBalance >= (doctor.fee || doctor.fees || 500) ? 'bg-green-600 hover:bg-green-700 shadow-green-200 text-white' : 'bg-gray-400 cursor-not-allowed text-white')
+                            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white'
                             }`}
                     >
                         {loading ? (
