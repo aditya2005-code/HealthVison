@@ -1,10 +1,12 @@
+import logger from '../utils/logger.js';
+
 /**
  * Enhanced global error handler middleware
  * Handles various types of errors and provides consistent error responses
  */
 export const errorHandler = (err, req, res, next) => {
   // Log error details for debugging
-  console.error('Error occurred:', {
+  logger.error('Error occurred:', {
     name: err.name,
     message: err.message,
     path: req.path,
@@ -15,7 +17,7 @@ export const errorHandler = (err, req, res, next) => {
 
   // Log full stack trace in development
   if (process.env.NODE_ENV !== 'production') {
-    console.error(err.stack);
+    logger.error(err.stack);
   }
 
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
@@ -25,8 +27,8 @@ export const errorHandler = (err, req, res, next) => {
   // Mongoose CastError (Invalid ObjectId)
   if (err.name === 'CastError') {
     statusCode = 400;
-    message = err.kind === 'ObjectId' 
-      ? 'Invalid ID format' 
+    message = err.kind === 'ObjectId'
+      ? 'Invalid ID format'
       : `Invalid ${err.path}: ${err.value}`;
   }
 
@@ -47,7 +49,7 @@ export const errorHandler = (err, req, res, next) => {
     message = 'Validation failed';
   }
 
-// JWT Errors
+  // JWT Errors
   if (err.name === 'JsonWebTokenError') {
     statusCode = 401;
     message = 'Invalid token. Please log in again.';
@@ -98,7 +100,7 @@ export const errorHandler = (err, req, res, next) => {
   const errorResponse = {
     success: false,
     message,
-     statusCode
+    statusCode
   };
 
   // Add validation errors if present
