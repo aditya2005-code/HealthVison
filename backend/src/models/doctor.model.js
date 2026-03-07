@@ -9,12 +9,12 @@ const doctorSchema = new mongoose.Schema(
         },
         specialization: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
         },
         experience: {
             type: Number,
-            required: true,
+            required: false,
             min: 0,
         },
         rating: {
@@ -29,17 +29,17 @@ const doctorSchema = new mongoose.Schema(
         },
         about: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
         },
         qualifications: {
             type: String, // e.g., "MBBS, MD"
-            required: true,
+            required: false,
             trim: true,
         },
         location: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
         },
         languages: {
@@ -48,17 +48,17 @@ const doctorSchema = new mongoose.Schema(
         },
         registration: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
         },
         contact: {
             type: String, // Store phone number as string
-            required: true,
+            required: false,
             trim: true,
         },
         fee: {
             type: Number,
-            required: true,
+            required: false,
             min: 0,
         },
         userId: {

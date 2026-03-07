@@ -61,6 +61,15 @@ export const registerUser = async (req, res, next) => {
       avatarUrl: uploadedAvatarUrl
     });
 
+    if (role === 'doctor') {
+      const { Doctor } = await import("../models/doctor.model.js");
+      await Doctor.create({
+        userId: user._id,
+        name: `${name.first} ${name.last || ''}`.trim(),
+        avatarUrl: uploadedAvatarUrl
+      });
+    }
+
     const token = generateToken(user._id);
 
     return res.status(201).json({
