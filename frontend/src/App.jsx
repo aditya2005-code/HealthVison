@@ -9,6 +9,7 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
+import Profile from './pages/Profile';
 import PublicLayout from './layouts/PublicLayout';
 import DoctorsList from './pages/Doctors/DoctorsList';
 import DoctorDetail from './pages/Doctors/DoctorDetail';
@@ -58,6 +59,7 @@ function App() {
             <Route path="payment/success" element={<PaymentSuccess />} />
             <Route path="payment/failure" element={<PaymentFailure />} />
             <Route path="payment/history" element={<PaymentHistory />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="consultation/:roomId" element={<VideoConsultation />} />
             <Route path="*" element={<div className="p-4">404 Not Found</div>} />
           </Route>

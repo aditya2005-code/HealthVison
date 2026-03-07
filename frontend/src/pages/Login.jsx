@@ -78,9 +78,9 @@ const Login = () => {
                     Sign in to your account
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
-                    Or{' '}
+                    Don't have an account?{' '}
                     <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-                        create a new account
+                        Sign up
                     </Link>
                 </p>
             </div>
