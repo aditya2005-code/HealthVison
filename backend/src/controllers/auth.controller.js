@@ -3,7 +3,6 @@ import { generateToken } from "../utils/generateToken.js";
 import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
 import imagekit from "../utils/imagekit.js";
-import ImageKit from "imagekit";
 
 export const registerUser = async (req, res, next) => {
   try {
