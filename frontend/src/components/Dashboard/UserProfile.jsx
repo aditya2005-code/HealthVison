@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, Mail, Phone, MapPin } from 'lucide-react';
+import Avatar from '../ui/Avatar';
 
 const UserProfile = ({ user }) => {
     if (!user) return null;
@@ -9,10 +10,12 @@ const UserProfile = ({ user }) => {
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-24"></div>
             <div className="px-6 pb-6">
                 <div className="relative -top-10 mb-[-2.5rem]">
-                    <div className="w-20 h-20 bg-white rounded-full p-1 shadow-md inline-block">
-                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xl font-bold">
-                            {user.name?.first ? user.name.first.charAt(0).toUpperCase() : 'U'}
-                        </div>
+                    <div className="w-20 h-20 bg-white rounded-full p-1 shadow-md inline-block overflow-hidden">
+                        <Avatar 
+                            src={user.avatarUrl} 
+                            alt={user.name?.first || 'User'} 
+                            className="w-full h-full"
+                        />
                     </div>
                 </div>
                 <div className="mt-12">
@@ -35,10 +38,10 @@ const UserProfile = ({ user }) => {
                             {user.phone}
                         </div>
                     )}
-                    {user.address && (
+                    {(user.location || user.address?.city) && (
                         <div className="flex items-center text-gray-600 text-sm">
                             <MapPin className="w-4 h-4 mr-3" />
-                            {user.address.city || 'Location not set'}
+                            {user.location || user.address.city}
                         </div>
                     )}
                 </div>
