@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import authService from '../services/auth.service';
 import UserProfile from '../components/Dashboard/UserProfile';
+import Avatar from '../components/ui/Avatar';
 
 export default function Header({ toggleSidebar }) {
     const navigate = useNavigate();
@@ -35,15 +36,28 @@ export default function Header({ toggleSidebar }) {
                             className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
                             onClick={() => setShowProfile(!showProfile)}
                         >
-                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
-                                {user.name?.first ? user.name.first.charAt(0).toUpperCase() : 'U'}
-                            </div>
+                            <Avatar 
+                                src={user.avatarUrl} 
+                                alt={user.name?.first} 
+                                className="w-8 h-8"
+                                iconSize="w-4 h-4"
+                            />
                             <span className="hidden sm:inline text-gray-700 font-medium">{user.name?.first || 'User'}</span>
                         </div>
 
                         {showProfile && (
                             <div className="absolute top-16 right-4 w-80 z-50">
+                                <div className="absolute top-[-10px] right-6 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white"></div>
                                 <UserProfile user={user} />
+                                <div className="bg-white border-t border-gray-100 rounded-b-xl shadow-lg p-3">
+                                    <Link 
+                                        to="/profile" 
+                                        onClick={() => setShowProfile(false)}
+                                        className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                    >
+                                        Manage Profile
+                                    </Link>
+                                </div>
                             </div>
                         )}
 

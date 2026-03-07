@@ -1,6 +1,7 @@
 import { Calendar, Clock, User, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
+import Avatar from '../ui/Avatar';
 
 const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
     const navigate = useNavigate();
@@ -42,9 +43,11 @@ const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
                             <div key={apt._id || apt.id} className="p-4 space-y-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center">
-                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                            <User className="w-5 h-5" />
-                                        </div>
+                                        <Avatar 
+                                            src={userRole === 'doctor' ? apt.patientAvatar : apt.doctorAvatar}
+                                            alt={userRole === 'doctor' ? apt.patientName : apt.doctorName}
+                                            className="h-10 w-10"
+                                        />
                                         <div className="ml-3">
                                             <div className="text-sm font-bold text-gray-900">
                                                 {userRole === 'doctor' ? (apt.patientName || 'Patient') : (apt.doctorName || 'Doctor')}
@@ -117,9 +120,12 @@ const AppointmentHistory = ({ appointments, onReschedule, onCancel }) => {
                                 <tr key={apt._id || apt.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         <div className="flex items-center">
-                                            <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">
-                                                {userRole === 'doctor' ? (apt.patientName?.[0] || 'P') : (apt.doctorName?.[0] || 'D')}
-                                            </div>
+                                            <Avatar 
+                                                src={userRole === 'doctor' ? apt.patientAvatar : apt.doctorAvatar}
+                                                alt={userRole === 'doctor' ? apt.patientName : apt.doctorName}
+                                                className="h-8 w-8"
+                                                iconSize="w-4 h-4"
+                                            />
                                             <div className="ml-4">
                                                 <div className="font-bold text-gray-900 leading-tight">
                                                     {userRole === 'doctor' ? (apt.patientName || 'Patient') : (apt.doctorName || 'Doctor')}

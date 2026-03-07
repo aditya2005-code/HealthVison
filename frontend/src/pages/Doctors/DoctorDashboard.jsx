@@ -77,6 +77,7 @@ export default function DoctorDashboard() {
         .map(apt => ({
             id: apt._id,
             patientName: apt.userId?.name ? (typeof apt.userId.name === 'string' ? apt.userId.name : `${apt.userId.name.first} ${apt.userId.name.last}`) : 'Unknown Patient',
+            patientAvatar: apt.userId?.avatarUrl,
             date: new Date(apt.date).toLocaleDateString(),
             time: apt.time,
             status: apt.status
@@ -110,11 +111,18 @@ export default function DoctorDashboard() {
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        Welcome back, Dr. {user?.name?.first || 'Doctor'}!
-                    </h1>
-                    <p className="text-gray-500 mt-1">Here is your clinical overview for today.</p>
+                <div className="flex items-center gap-4">
+                    <Avatar 
+                        src={user?.avatarUrl} 
+                        alt={user?.name?.first || 'Doctor'} 
+                        className="w-16 h-16"
+                    />
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">
+                            Welcome back, Dr. {user?.name?.first || 'Doctor'}!
+                        </h1>
+                        <p className="text-gray-500 mt-1">Here is your clinical overview for today.</p>
+                    </div>
                 </div>
             </div>
 
