@@ -12,6 +12,8 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
         day: 'numeric'
     });
 
+    const fee = doctor.fee || doctor.fees || 500;
+
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white text-center">
@@ -73,10 +75,16 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
                             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                                 <CheckCircle className="w-5 h-5" />
                             </div>
-                            <div>
+                            <div className="flex-grow">
                                 <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Consultation Fee</p>
-                                <p className="font-bold text-gray-900">₹{doctor.fee || doctor.fees || 500}</p>
+                                <p className="font-bold text-gray-900">₹{fee}</p>
                             </div>
+                            {useWallet && walletBalance > 0 && walletBalance < fee && (
+                                <div className="text-right">
+                                    <p className="text-[10px] text-blue-600 font-bold uppercase">-₹{Math.min(walletBalance, fee)} Wallet</p>
+                                    <p className="text-xs font-bold text-gray-900">Net: ₹{fee - Math.min(walletBalance, fee)}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -109,9 +117,9 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center ${useWallet
-                            ? (walletBalance >= (doctor.fee || doctor.fees || 500) ? 'bg-green-600 hover:bg-green-700 shadow-green-200 text-white' : 'bg-gray-400 cursor-not-allowed text-white')
-                            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white'
+                        className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center ${useWallet && walletBalance >= fee
+                                ? 'bg-green-600 hover:bg-green-700 shadow-green-200 text-white'
+                                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 text-white'
                             }`}
                     >
                         {loading ? (
@@ -120,7 +128,11 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
                                 Processing...
                             </>
                         ) : (
-                            useWallet ? (walletBalance >= (doctor.fee || doctor.fees || 500) ? 'Pay with Wallet' : 'Insufficient Balance') : 'Confirm & Pay'
+                            useWallet
+                                ? (walletBalance >= fee
+                                    ? 'Pay with Wallet'
+                                    : `Pay ₹${fee - walletBalance} + Wallet`)
+                                : 'Confirm & Pay'
                         )}
                     </button>
                     <p className="text-center text-xs text-gray-400">

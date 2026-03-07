@@ -15,6 +15,14 @@ const paymentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    walletAmount: {
+        type: Number,
+        default: 0
+    },
+    razorpayAmount: {
+        type: Number,
+        default: 0
+    },
     status: {
         type: String,
         enum: ["pending", "completed", "failed"],
