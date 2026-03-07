@@ -175,6 +175,7 @@ export default function Dashboard() {
         .map(apt => ({
             id: apt._id,
             doctorName: apt.doctorId?.name ? (typeof apt.doctorId.name === 'string' ? apt.doctorId.name : `${apt.doctorId.name.first} ${apt.doctorId.name.last}`) : 'Unknown Doctor',
+            doctorAvatar: apt.doctorId?.avatarUrl,
             specialization: apt.doctorId?.specialization || 'General',
             date: new Date(apt.date).toLocaleDateString(),
             time: apt.time,
@@ -186,11 +187,18 @@ export default function Dashboard() {
         <div className="space-y-8">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        Welcome back, {user?.name?.first || 'Guest'}!
-                    </h1>
-                    <p className="text-gray-500 mt-1">Here's your health overview for today.</p>
+                <div className="flex items-center gap-4">
+                    <Avatar 
+                        src={user?.avatarUrl}
+                        alt={user?.name?.first}
+                        className="w-16 h-16 border-2 border-white shadow-sm"
+                    />
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">
+                            Welcome back, {user?.name?.first || 'Guest'}!
+                        </h1>
+                        <p className="text-gray-500">Here's your health overview for today.</p>
+                    </div>
                 </div>
                 <button
                     onClick={() => navigate('/appointments/book')}
@@ -316,7 +324,7 @@ export default function Dashboard() {
                                 {stats.appointments.total > 0 ? (
                                     <div className="flex items-start">
                                         <Avatar
-                                            src={user?.profilePicture}
+                                            src={user?.avatarUrl}
                                             alt={user?.name?.first}
                                             className="w-10 h-10"
                                             iconSize="w-5 h-5"

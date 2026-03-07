@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, User, AlertCircle, X, CheckCircle, RefreshCcw,
 import Avatar from '../components/ui/Avatar';
 import appointmentService from '../services/appointment.service';
 import RescheduleModal from '../components/Appointment/RescheduleModal';
+import AppointmentDetailsModal from '../components/Appointment/AppointmentDetailsModal';
 import paymentService from '../services/payment.service';
 import authService from '../services/auth.service';
 import toast from 'react-hot-toast';
@@ -16,6 +17,8 @@ const Appointments = () => {
     const [filter, setFilter] = useState('Upcoming'); // Upcoming, Past, Cancelled, All
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [viewingAppointment, setViewingAppointment] = useState(null);
     const [walletBalance, setWalletBalance] = useState(0);
     const user = authService.getCurrentUser();
     const isDoctor = user?.role === 'doctor';
@@ -111,6 +114,11 @@ const Appointments = () => {
     const handleRescheduleClick = (apt) => {
         setSelectedAppointment(apt);
         setIsRescheduleModalOpen(true);
+    };
+
+    const handleDetailsClick = (apt) => {
+        setViewingAppointment(apt);
+        setIsDetailsModalOpen(true);
     };
 
     const handleJoinConsultation = (apt) => {
@@ -280,42 +288,47 @@ const Appointments = () => {
                                         {apt.status}
                                     </span>
 
-                                    {apt.status === 'Scheduled' && (
-                                        <div className="flex items-center gap-2 ml-auto sm:ml-0">
-                                            <button
-                                                onClick={() => handleJoinConsultation(apt)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 shadow-md shadow-blue-100 ring-2 ring-blue-500/10 group/call"
-                                                title="Start Video Call"
-                                            >
-                                                <Video className="w-4 h-4 group-hover/call:scale-110 transition-transform" />
-                                                <span className="hidden sm:inline">Join Call</span>
-                                            </button>
-                                            {!isDoctor && (
+                                    <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                                        {/* Primary Actions for Scheduled/Confirmed/Pending */}
+                                        {(apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Pending') && (
+                                            <>
                                                 <button
-                                                    onClick={() => handleRescheduleClick(apt)}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white rounded-xl text-sm font-bold border border-gray-100 transition-all duration-200 active:scale-95 shadow-sm"
-                                                    title="Reschedule"
+                                                    onClick={() => handleJoinConsultation(apt)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 shadow-md shadow-blue-100 ring-2 ring-blue-500/10 group/call"
+                                                    title="Start Video Call"
                                                 >
-                                                    <RefreshCcw className="w-4 h-4" />
-                                                    <span className="hidden sm:inline">Reschedule</span>
+                                                    <Video className="w-4 h-4 group-hover/call:scale-110 transition-transform" />
+                                                    <span className="hidden sm:inline">Join Call</span>
                                                 </button>
-                                            )}
-                                            <button
-                                                onClick={() => handleCancel(apt._id)}
-                                                className="p-2 bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-xl border border-gray-100 transition-all active:scale-95 shadow-sm"
-                                                title="Cancel Appointment"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    )}
+                                                {!isDoctor && (
+                                                    <button
+                                                        onClick={() => handleRescheduleClick(apt)}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white rounded-xl text-sm font-bold border border-gray-100 transition-all duration-200 active:scale-95 shadow-sm"
+                                                        title="Reschedule"
+                                                    >
+                                                        <RefreshCcw className="w-4 h-4" />
+                                                        <span className="hidden sm:inline">Reschedule</span>
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleCancel(apt._id)}
+                                                    className="p-2 bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-xl border border-gray-100 transition-all active:scale-95 shadow-sm"
+                                                    title="Cancel Appointment"
+                                                >
+                                                    <X className="w-5 h-5" />
+                                                </button>
+                                            </>
+                                        )}
 
-                                    {(apt.status === 'Completed' || apt.status === 'Cancelled') && (
-                                        <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-sm font-bold border border-gray-100 transition-all group/btn">
+                                        {/* Always show Details for any status */}
+                                        <button
+                                            onClick={() => handleDetailsClick(apt)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-sm font-bold border border-gray-100 transition-all group/btn"
+                                        >
                                             Details
                                             <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -328,6 +341,13 @@ const Appointments = () => {
                 onClose={() => setIsRescheduleModalOpen(false)}
                 appointment={selectedAppointment}
                 onRescheduled={fetchAppointments}
+            />
+
+            <AppointmentDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                appointment={viewingAppointment}
+                isDoctor={isDoctor}
             />
         </div>
     );

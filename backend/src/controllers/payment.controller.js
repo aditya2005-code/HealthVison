@@ -76,7 +76,7 @@ const sendConfirmationEmail = async (appointmentId) => {
 
 export const createPayment = async (req, res) => {
     try {
-        const { amount, appointmentId } = req.body;
+        const { amount, appointmentId, walletAmount = 0 } = req.body;
         const userId = req.user._id;
 
         const user = await User.findById(userId);
@@ -93,26 +93,58 @@ export const createPayment = async (req, res) => {
             return res.status(400).json({ message: "Invalid amount" });
         }
 
-        const options = {
-            amount: amount * 100, // amount in smallest currency unit
-            currency: "INR",
-            receipt: `payment_${Date.now()}`,
-            notes: {
-                userId: user._id.toString(),
-                userEmail: user.email,
-                appointmentId: appointment._id.toString()
-            }
-        };
+        const razorpayAmount = amount - walletAmount;
 
-        const order = await razorpay.orders.create(options);
+        if (walletAmount > (user.walletBalance || 0)) {
+            return res.status(400).json({ message: "Insufficient wallet balance" });
+        }
+
+        if (razorpayAmount < 0) {
+            return res.status(400).json({ message: "Wallet deduction cannot exceed total amount" });
+        }
+
+        // Hybrid Payment: Create a Razorpay order for the remaining balance after 
+        // deducting the selected wallet amount.
+
+        let order = { id: `full_wallet_${Date.now()}`, amount: 0, currency: "INR" };
+        if (razorpayAmount > 0) {
+            const options = {
+                amount: Math.round(razorpayAmount * 100), // amount in smallest currency unit
+                currency: "INR",
+                receipt: `payment_${Date.now()}`,
+                notes: {
+                    userId: user._id.toString(),
+                    userEmail: user.email,
+                    appointmentId: appointment._id.toString(),
+                    walletAmount: walletAmount.toString()
+                }
+            };
+            order = await razorpay.orders.create(options);
+        }
 
         await Payment.create({
             userId: user._id,
             appointmentId: appointment._id,
             amount: amount,
-            status: "pending",
+            walletAmount: walletAmount,
+            razorpayAmount: razorpayAmount,
+            status: razorpayAmount > 0 ? "pending" : "completed",
             paymentId: order.id
         });
+
+        // If it's a full wallet payment that somehow reached here:
+        if (razorpayAmount === 0) {
+            user.walletBalance -= walletAmount;
+            await user.save();
+            appointment.paymentStatus = "Paid";
+            await appointment.save();
+            await Timeslot.findOneAndUpdate(
+                { doctorId: appointment.doctorId, date: appointment.date, time: appointment.time },
+                { status: "Booked" }
+            );
+            sendConfirmationEmail(appointmentId);
+            return res.status(200).json({ message: "Payment successful via wallet", order: null });
+        }
 
         return res.status(200).json({ order });
     } catch (error) {
@@ -144,6 +176,15 @@ export const verifyPayment = async (req, res) => {
         );
 
         if (payment) {
+            // Deduct wallet amount if it was a hybrid payment
+            if (payment.walletAmount > 0) {
+                const user = await User.findById(payment.userId);
+                if (user) {
+                    user.walletBalance = (user.walletBalance || 0) - payment.walletAmount;
+                    await user.save();
+                }
+            }
+
             const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
             if (appointment) {
                 // Update the Timeslot to Booked

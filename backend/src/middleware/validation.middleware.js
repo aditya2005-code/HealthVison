@@ -14,16 +14,17 @@ export const handleValidationErrors = (req, res, next) => {
 
 export const registerValidation = [
   body('name.first').notEmpty().withMessage('First name is required'),
+  body('name.last').notEmpty().withMessage('Last name is required'),
   body('email').isEmail().withMessage('Please include a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('phone').notEmpty().withMessage('Phone number is required'),
-  body('dateOfBirth').notEmpty().withMessage('Date of Birth is required'),
-  body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender'),
+  body('dateOfBirth').optional(),
+  body('gender').optional().isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender'),
   body('bloodGroup').optional(),
-  body('emergencyContact.name').notEmpty().withMessage('Emergency contact name is required'),
-  body('emergencyContact.phone').notEmpty().withMessage('Emergency contact phone is required'),
-  body('emergencyContact.relation').notEmpty().withMessage('Emergency contact relation is required'),
-  // will add other fields as needed based on strictness requirements
+  body('emergencyContact.name').optional(),
+  body('emergencyContact.phone').optional(),
+  body('emergencyContact.relation').optional(),
+  body('avatarUrl').optional(),
 ];
 
 export const loginValidation = [
@@ -37,4 +38,13 @@ export const forgotPasswordValidation = [
 
 export const resetPasswordValidation = [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+];
+
+export const updateProfileValidation = [
+  body('name.first').optional().notEmpty().withMessage('First name cannot be empty'),
+  body('email').optional().isEmail().withMessage('Please include a valid email'),
+  body('phone').optional().notEmpty().withMessage('Phone number cannot be empty'),
+  body('gender').optional().isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender'),
+  body('bloodGroup').optional().isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '']).withMessage('Invalid blood group'),
+  body('avatarUrl').optional(),
 ];

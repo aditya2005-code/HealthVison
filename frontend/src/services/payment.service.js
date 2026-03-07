@@ -1,10 +1,11 @@
 import api from './api';
 
 const paymentService = {
-    createPayment: async (amount, appointmentId) => {
+    createPayment: async (amount, appointmentId, walletAmount = 0) => {
         const response = await api.post('/payment/create', {
             amount,
-            appointmentId
+            appointmentId,
+            walletAmount
         });
         return response.data;
     },

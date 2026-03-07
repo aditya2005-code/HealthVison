@@ -37,12 +37,12 @@ const userSchema = new mongoose.Schema({
   },
   dateOfBirth: {
     type: Date,
-    required: true
+    required: false
   },
   gender: {
     type: String,
     enum: ["Male", "Female", "Other"],
-    required: true
+    required: false
   },
   address: {
     street: String,
@@ -51,18 +51,19 @@ const userSchema = new mongoose.Schema({
     zipCode: String,
     country: String
   },
+  location: String,
   bloodGroup: {
     type: String,
     enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
-    required: true
+    required: false
   },
   height: {
     type: Number,
-    required: true
+    required: false
   },
   weight: {
     type: Number,
-    required: true
+    required: false
   },
   allergies: [{
     type: String
@@ -77,6 +78,10 @@ const userSchema = new mongoose.Schema({
     dosage: String,
     frequency: String
   }],
+  avatarUrl: {
+    type: String,
+    required: false,
+  },
   hospitalDetails: {
     patientId: {
       type: String,
@@ -93,10 +98,6 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     },
-    avatarUrl: {
-      type: String,
-      required: false,
-    },
     status: {
       type: String,
       enum: ["Admitted", "Discharged", "Outpatient", "Emergency"],
@@ -106,15 +107,15 @@ const userSchema = new mongoose.Schema({
   emergencyContact: {
     name: {
       type: String,
-      required: true
+      required: false
     },
     phone: {
       type: String,
-      required: true
+      required: false
     },
     relation: {
       type: String,
-      required: true
+      required: false
     }
   },
   insurance: {

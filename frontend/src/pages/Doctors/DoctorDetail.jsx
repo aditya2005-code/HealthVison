@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, MapPin, Clock, Calendar, ShieldCheck, Phone } from 'lucide-react';
 import doctorService from '../../services/doctor.service';
+import appointmentService from '../../services/appointment.service';
 
 export default function DoctorDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [doctor, setDoctor] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [timeslots, setTimeslots] = useState([]);
+    const [slotsLoading, setSlotsLoading] = useState(false);
 
     useEffect(() => {
         const fetchDoctor = async () => {
@@ -29,6 +33,24 @@ export default function DoctorDetail() {
         if (id) {
             fetchDoctor();
         }
+    }, [id]);
+
+    useEffect(() => {
+        const fetchSlots = async () => {
+            if (!id) return;
+            try {
+                setSlotsLoading(true);
+                const today = new Date().toISOString().split('T')[0];
+                const res = await appointmentService.getTimeslots(id, today);
+                // Limit to first 4 slots for preview
+                setTimeslots((res.data || []).slice(0, 4));
+            } catch (err) {
+                console.error("Failed to fetch slots", err);
+            } finally {
+                setSlotsLoading(false);
+            }
+        };
+        fetchSlots();
     }, [id]);
 
     if (loading) return (
@@ -144,20 +166,40 @@ export default function DoctorDetail() {
                             Available Slots
                         </h3>
 
-                        <div className="space-y-3 mb-6">
-                            {doctor.availability && doctor.availability.map((slot, index) => (
-                                <div key={index} className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 flex items-center">
-                                    <Clock className="w-4 h-4 mr-2 opacity-70" />
-                                    {slot}
+                        <div className="space-y-2 mb-6">
+                            {slotsLoading ? (
+                                <div className="space-y-2">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-10 bg-gray-100 animate-pulse rounded-lg"></div>
+                                    ))}
                                 </div>
-                            ))}
+                            ) : timeslots.length > 0 ? (
+                                <>
+                                    <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">Available Today</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {timeslots.map((slot, index) => (
+                                            <div key={index} className={`p-2 border rounded-lg text-sm text-center ${slot.isAvailable ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                                                {slot.time}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 mt-2 italic text-center">Click book to see full schedule</p>
+                                </>
+                            ) : (
+                                <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-500 text-center">
+                                    No slots available for today
+                                </div>
+                            )}
                         </div>
 
-                        <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-95">
+                        <button
+                            onClick={() => navigate('/appointments/book', { state: { doctor } })}
+                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-95"
+                        >
                             Book Appointment
                         </button>
                         <p className="text-xs text-center text-gray-400 mt-4">
-                            No booking fee required
+                            Inclusive of all taxes
                         </p>
                     </div>
                 </div>
