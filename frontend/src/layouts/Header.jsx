@@ -36,9 +36,9 @@ export default function Header({ toggleSidebar }) {
                             className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
                             onClick={() => setShowProfile(!showProfile)}
                         >
-                            <Avatar 
-                                src={user.avatarUrl} 
-                                alt={user.name?.first} 
+                            <Avatar
+                                src={user.avatarUrl}
+                                alt={user.name?.first}
                                 className="w-8 h-8"
                                 iconSize="w-4 h-4"
                             />
@@ -50,8 +50,8 @@ export default function Header({ toggleSidebar }) {
                                 <div className="absolute top-[-10px] right-6 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white"></div>
                                 <UserProfile user={user} />
                                 <div className="bg-white border-t border-gray-100 rounded-b-xl shadow-lg p-3">
-                                    <Link 
-                                        to="/profile" 
+                                    <Link
+                                        to={user.role === 'doctor' ? "/doctor/profile" : "/profile"}
                                         onClick={() => setShowProfile(false)}
                                         className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                                     >

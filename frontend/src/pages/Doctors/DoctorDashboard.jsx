@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Users, Calendar, Clock, CheckCircle, AlertCircle, TrendingUp, Search, Filter, MoreVertical, User, Activity } from 'lucide-react';
+import { Users, Calendar, Clock, CheckCircle, AlertCircle, TrendingUp, Search, Filter, MoreVertical, User, Activity, Video, IndianRupee } from 'lucide-react';
 import Avatar from '../../components/ui/Avatar';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -112,9 +112,9 @@ export default function DoctorDashboard() {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
-                    <Avatar 
-                        src={user?.avatarUrl} 
-                        alt={user?.name?.first || 'Doctor'} 
+                    <Avatar
+                        src={user?.avatarUrl}
+                        alt={user?.name?.first || 'Doctor'}
                         className="w-16 h-16"
                     />
                     <div>
@@ -188,17 +188,23 @@ export default function DoctorDashboard() {
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-800 mb-4">Quick Links</h3>
                             <div className="space-y-3">
-                                <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center text-gray-700 transition-colors border border-transparent hover:border-gray-100">
+                                <button
+                                    onClick={() => toast.success('Patient Records - Coming Soon!')}
+                                    className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center text-gray-700 transition-colors border border-transparent hover:border-gray-100"
+                                >
                                     <div className="bg-purple-100 p-2 rounded-lg mr-3">
                                         <Users className="w-4 h-4 text-purple-600" />
                                     </div>
                                     <span className="text-sm font-medium">Patient Records</span>
                                 </button>
-                                <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center text-gray-700 transition-colors border border-transparent hover:border-gray-100">
+                                <button
+                                    onClick={() => toast.success('Earning History - Coming Soon!')}
+                                    className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center text-gray-700 transition-colors border border-transparent hover:border-gray-100"
+                                >
                                     <div className="bg-green-100 p-2 rounded-lg mr-3">
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                        <IndianRupee className="w-4 h-4 text-green-600" />
                                     </div>
-                                    <span className="text-sm font-medium">Availability Settings</span>
+                                    <span className="text-sm font-medium">Earning History</span>
                                 </button>
                             </div>
                         </div>

@@ -81,13 +81,14 @@ const Signup = () => {
         setApiError('');
         try {
             const registrationData = {
-                name: { 
+                name: {
                     first: formData.firstName,
                     last: formData.lastName
                 },
                 email: formData.email,
                 password: formData.password,
-                phone: formData.phone
+                phone: formData.phone,
+                role: formData.role || 'patient'
             };
             await authService.register(registrationData);
             navigate('/');
@@ -201,9 +202,9 @@ const Signup = () => {
                         onChange={handleChange}
                         error={errors.confirmPassword}
                         helperText={
-                            formData.password && formData.confirmPassword && formData.password === formData.confirmPassword 
-                            ? <span className="text-green-600 font-medium text-xs">Matched</span> 
-                            : ""
+                            formData.password && formData.confirmPassword && formData.password === formData.confirmPassword
+                                ? <span className="text-green-600 font-medium text-xs">Matched</span>
+                                : ""
                         }
                         rightElement={<EyeIcon visible={showConfirmPassword} onClick={toggleConfirmPasswordVisibility} />}
                     />
@@ -218,6 +219,20 @@ const Signup = () => {
                             onChange={handleChange}
                             error={errors.phone}
                         />
+                        <div className="flex flex-col">
+                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                                Role
+                            </label>
+                            <select
+                                id="role"
+                                value={formData.role || 'patient'}
+                                onChange={handleChange}
+                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            >
+                                <option value="patient">Patient</option>
+                                <option value="doctor">Doctor</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div>

@@ -16,9 +16,12 @@ const ProtectedRoute = () => {
             authService.logout();
             toast.error("Session expired. Please login again.", { id: 'session-expired' });
             navigate('/login', { replace: true });
-        } else if (user && isProfileComplete && !isProfileComplete(user) && location.pathname !== '/profile') {
-            toast.error("Please complete your profile details first", { id: 'profile-incomplete' });
-            navigate('/profile', { replace: true });
+        } else if (user && isProfileComplete && !isProfileComplete(user)) {
+            const profilePath = user.role === 'doctor' ? '/doctor/profile' : '/profile';
+            if (location.pathname !== profilePath) {
+                toast.error("Please complete your profile details first", { id: 'profile-incomplete' });
+                navigate(profilePath, { replace: true });
+            }
         }
     }, [user, location.pathname, navigate]);
 
@@ -26,8 +29,11 @@ const ProtectedRoute = () => {
         return <Navigate to="/login" replace state={{ from: location }} />;
     }
 
-    if (!isProfileComplete(user) && location.pathname !== '/profile') {
-        return <Navigate to="/profile" replace />;
+    if (!isProfileComplete(user)) {
+        const profilePath = user.role === 'doctor' ? '/doctor/profile' : '/profile';
+        if (location.pathname !== profilePath) {
+            return <Navigate to={profilePath} replace />;
+        }
     }
 
     return <Outlet />;
