@@ -32,14 +32,14 @@ export const registerUser = async (req, res, next) => {
     if (emailExists) {
       return res.status(409).json({ message: "User already exists." });
     }
-    let uploadedAvaratUrl=null;
-    if(avatarUrl){
-      const uploadImage=await imagekit.upload({
-        file:avatarUrl,
-        fileName:`${name}_avatar.jpg`,
-        folder:"/avatars"
-      })
-      uploadedAvaratUrl=uploadImage.url;
+    let uploadedAvatarUrl = null;
+    if (avatarUrl) {
+      const uploadImage = await imagekit.files.upload({
+        file: avatarUrl,
+        fileName: `${name.first}_avatar.jpg`,
+        folder: "/avatars"
+      });
+      uploadedAvatarUrl = uploadImage.url;
     }
     const user = await User.create({
       name,
@@ -58,7 +58,7 @@ export const registerUser = async (req, res, next) => {
       currentMedications,
       emergencyContact,
       insurance,
-      avatarUrl:uploadedAvaratUrl
+      avatarUrl: uploadedAvatarUrl
     });
 
     const token = generateToken(user._id);
@@ -83,7 +83,7 @@ export const registerUser = async (req, res, next) => {
         currentMedications: user.currentMedications,
         emergencyContact: user.emergencyContact,
         insurance: user.insurance,
-        avatarUrl:user.avatarUrl
+        avatarUrl: user.avatarUrl
       },
     });
   } catch (error) {
@@ -136,7 +136,7 @@ export const loginUser = async (req, res, next) => {
         currentMedications: user.currentMedications,
         emergencyContact: user.emergencyContact,
         insurance: user.insurance,
-        avatarUrl:user.avatarUrl
+        avatarUrl: user.avatarUrl
       },
     });
   } catch (error) {
