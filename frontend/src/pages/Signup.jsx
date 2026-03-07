@@ -7,10 +7,12 @@ import authService from '../services/auth.service';
 const Signup = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         password: '',
         confirmPassword: '',
+        phone: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -20,13 +22,17 @@ const Signup = () => {
 
     const validate = () => {
         const newErrors = {};
-        const name = formData.name.trim();
+        const firstName = formData.firstName.trim();
+        const lastName = formData.lastName.trim();
         const email = formData.email.trim();
         const password = formData.password.trim();
         const confirmPassword = formData.confirmPassword.trim();
 
-        if (!name) {
-            newErrors.name = 'Please enter your full name';
+        if (!firstName) {
+            newErrors.firstName = 'First name is required';
+        }
+        if (!lastName) {
+            newErrors.lastName = 'Last name is required';
         }
         if (!email) {
             newErrors.email = 'Please enter your email address';
@@ -41,6 +47,8 @@ const Signup = () => {
         if (password !== confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
+        if (!formData.phone) newErrors.phone = 'Phone number is required';
+
         return newErrors;
     };
 
@@ -60,6 +68,7 @@ const Signup = () => {
         if (apiError) setApiError('');
     };
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
@@ -71,11 +80,16 @@ const Signup = () => {
         setIsLoading(true);
         setApiError('');
         try {
-            await authService.register({
-                name: formData.name,
+            const registrationData = {
+                name: { 
+                    first: formData.firstName,
+                    last: formData.lastName
+                },
                 email: formData.email,
                 password: formData.password,
-            });
+                phone: formData.phone
+            };
+            await authService.register(registrationData);
             navigate('/');
         } catch (err) {
             setApiError(err.message || 'Failed to create account. Please try again.');
@@ -134,15 +148,27 @@ const Signup = () => {
                         </div>
                     )}
 
-                    <Input
-                        id="name"
-                        label="Full Name"
-                        type="text"
-                        placeholder="e.g., Rishi Tiwari"
-                        value={formData.name}
-                        onChange={handleChange}
-                        error={errors.name}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                            id="firstName"
+                            label="First Name"
+                            type="text"
+                            placeholder="e.g., Rishi"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            error={errors.firstName}
+                        />
+
+                        <Input
+                            id="lastName"
+                            label="Last Name"
+                            type="text"
+                            placeholder="e.g., Tiwari"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            error={errors.lastName}
+                        />
+                    </div>
 
                     <Input
                         id="email"
@@ -174,8 +200,25 @@ const Signup = () => {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         error={errors.confirmPassword}
+                        helperText={
+                            formData.password && formData.confirmPassword && formData.password === formData.confirmPassword 
+                            ? <span className="text-green-600 font-medium text-xs">Matched</span> 
+                            : ""
+                        }
                         rightElement={<EyeIcon visible={showConfirmPassword} onClick={toggleConfirmPasswordVisibility} />}
                     />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Input
+                            id="phone"
+                            label="Phone Number (+91)"
+                            type="tel"
+                            placeholder="98765 43210"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            error={errors.phone}
+                        />
+                    </div>
 
                     <div>
                         <Button
