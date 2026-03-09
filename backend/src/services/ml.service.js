@@ -24,10 +24,16 @@ export const extractTextFromReport = async (filePath, fileType) => {
         }
 
         const FormData = (await import('form-data')).default;
-        const fs = (await import('fs')).default;
+
+        // Fetch the file stream from the remote URL
+        const fileStreamResponse = await axios.get(filePath, { responseType: 'stream' });
 
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(filePath));
+        // Append the stream with filename and type so the ML API treats it as a file upload
+        formData.append('file', fileStreamResponse.data, {
+            filename: filePath.split('/').pop() || 'document',
+            contentType: fileType
+        });
         formData.append('fileType', fileType);
 
         const response = await axios.post(`${ML_API_URL}/api/ml/extract-text`, formData, {

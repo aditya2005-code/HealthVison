@@ -195,6 +195,13 @@ In the backend console, you may notice that every request from the frontend is l
 - **Cause**: The frontend is running in **React Strict Mode** (enabled in `frontend/src/main.jsx`). In development, React intentionally mounts components twice to help identify side effects, which triggers duplicate API calls.
 - **Note**: This behavior is restricted to the development environment and will not occur in the production build.
 
+#### 3. Frontend Still Hitting Old Backend Code or Cached Render APIs
+If you pull in backend changes (like switching to Cloudinary or new MongoDB routes) and testing them locally still shows the old logic:
+- **Cause**: Your backend server needs to be fully restarted, or your browser is making requests to a cached URL on Render instead of localhost.
+- **Solution**: 
+  1. Stop your local Node server (`Ctrl+C`) and start again: `npm run dev`.
+  2. Perform a Hard Refresh on your frontend (`Ctrl + F5` or `Shift + F5` on Windows).
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

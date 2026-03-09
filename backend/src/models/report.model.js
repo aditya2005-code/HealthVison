@@ -31,6 +31,10 @@ const reportSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         default: null
     },
+    cloudinaryId: {
+        type: String,
+        default: null
+    },
     status: {
         type: String,
         enum: ['pending', 'processing', 'completed', 'failed'],

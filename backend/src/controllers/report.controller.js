@@ -9,6 +9,8 @@ import {
 } from "../utils/validation.utils.js";
 import { analyzeReport as analyzeReportML } from '../services/ml.service.js';
 
+import cloudinary from '../config/cloudinary.js';
+
 /**
  * Upload a new report
  * POST /api/reports/upload
@@ -22,7 +24,8 @@ export const uploadReport = async (req, res) => {
         const report = new Report({
             userId: req.user.id,
             fileName: req.file.originalname,
-            fileUrl: req.file.path,
+            fileUrl: req.file.path, // Cloudinary URL
+            cloudinaryId: req.file.filename, // Cloudinary Public ID
             fileType: req.file.mimetype,
             fileSize: req.file.size,
             status: 'pending'
@@ -42,9 +45,21 @@ export const uploadReport = async (req, res) => {
             }
         });
     } catch (error) {
-        // If there's an error, delete the uploaded file
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
+        // If there's an error, delete the uploaded file from Cloudinary
+        if (req.file && req.file.filename) {
+            try {
+                // Determine resource type based on mimetype
+                let resourceType = 'auto';
+                if (req.file.mimetype === 'application/pdf') {
+                    resourceType = 'raw';
+                } else if (req.file.mimetype.startsWith('image/')) {
+                    resourceType = 'image';
+                }
+                
+                await cloudinary.uploader.destroy(req.file.filename, { resource_type: resourceType });
+            } catch (err) {
+                console.error("Failed to delete from Cloudinary upon save error:", err);
+            }
         }
         res.status(500).json({ message: 'Error uploading report', error: error.message });
     }
@@ -161,14 +176,19 @@ export const deleteReport = async (req, res) => {
             });
         }
 
-        // Delete the file from filesystem with error handling
-        if (report.fileUrl) {
+        // Delete the file from Cloudinary with error handling
+        if (report.cloudinaryId) {
             try {
-                if (fs.existsSync(report.fileUrl)) {
-                    fs.unlinkSync(report.fileUrl);
+                let resourceType = 'auto';
+                if (report.fileType === 'application/pdf') {
+                    resourceType = 'raw';
+                } else if (report.fileType && report.fileType.startsWith('image/')) {
+                    resourceType = 'image';
                 }
+                
+                await cloudinary.uploader.destroy(report.cloudinaryId, { resource_type: resourceType });
             } catch (fileError) {
-                console.error('Error deleting file:', fileError);
+                console.error('Error deleting file from Cloudinary:', fileError);
                 // Continue with database deletion even if file deletion fails
             }
         }
@@ -218,9 +238,9 @@ export const analyzeReport = async (req, res) => {
             return res.status(404).json({ message: 'Report not found' });
         }
 
-        // Check if file exists
-        if (!fs.existsSync(report.fileUrl)) {
-            return res.status(404).json({ message: 'Report file not found on server' });
+        // We rely on the Cloudinary URL existing
+        if (!report.fileUrl) {
+            return res.status(404).json({ message: 'Report file URL not found' });
         }
 
         // Update status to processing
