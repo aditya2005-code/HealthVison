@@ -9,13 +9,94 @@ import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Send a message to chatbot (with optional report context)
+/**
+ * @swagger
+ * /chatbot/message:
+ *   post:
+ *     summary: Send a message to the chatbot
+ *     tags: [Chatbot]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *               reportId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Chatbot response
+ */
 router.post('/message', protect, sendMessage);
-// Get chat history with pagination and filters
+
+/**
+ * @swagger
+ * /chatbot/history:
+ *   get:
+ *     summary: Get chat history
+ *     tags: [Chatbot]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Chat history
+ */
 router.get('/history', protect, getHistory);
-// Get conversations related to a specific report
+
+/**
+ * @swagger
+ * /chatbot/report/{reportId}:
+ *   get:
+ *     summary: Get chat conversations related to a specific report
+ *     tags: [Chatbot]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Related conversations retrieved
+ */
 router.get('/report/:reportId', protect, getReportConversations);
-// Delete a chat message
+
+/**
+ * @swagger
+ * /chatbot/message/{messageId}:
+ *   delete:
+ *     summary: Delete a chat message
+ *     tags: [Chatbot]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Message deleted
+ */
 router.delete('/message/:messageId', protect, deleteMessage);
 
 export default router;
