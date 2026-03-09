@@ -29,12 +29,17 @@ const app = express();
 let server;
 
 if (process.env.USE_HTTPS === 'true') {
-  const options = {
-    key: fs.readFileSync('server.key'),
-    cert: fs.readFileSync('server.cert')
-  };
-  server = https.createServer(options, app);
-  console.log('Using HTTPS for server');
+  try {
+    const options = {
+      key: fs.readFileSync('server.key'),
+      cert: fs.readFileSync('server.cert')
+    };
+    server = https.createServer(options, app);
+    console.log('Using HTTPS for server');
+  } catch (error) {
+    console.warn('Warning: USE_HTTPS is true but certificate files (server.key/server.cert) were not found. Falling back to HTTP. Note: Platforms like Render handle HTTPS automatically.');
+    server = http.createServer(app);
+  }
 } else {
   server = http.createServer(app);
 }
@@ -64,7 +69,11 @@ const nosqlSanitizer = (req, res, next) => {
 };
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(nosqlSanitizer);
 app.use(express.json());
