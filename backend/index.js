@@ -3,8 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import http from 'http';
-import https from 'https';
-import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './src/config/swagger.js';
 import { errorHandler } from './src/middleware/error.middleware.js';
@@ -28,21 +26,7 @@ dotenv.config();
 const app = express();
 let server;
 
-if (process.env.USE_HTTPS === 'true') {
-  try {
-    const options = {
-      key: fs.readFileSync('server.key'),
-      cert: fs.readFileSync('server.cert')
-    };
-    server = https.createServer(options, app);
-    console.log('Using HTTPS for server');
-  } catch (error) {
-    console.warn('Warning: USE_HTTPS is true but certificate files (server.key/server.cert) were not found. Falling back to HTTP. Note: Platforms like Render handle HTTPS automatically.');
-    server = http.createServer(app);
-  }
-} else {
-  server = http.createServer(app);
-}
+server = http.createServer(app);
 
 // Initialize Socket.io
 setupSocket(server);
