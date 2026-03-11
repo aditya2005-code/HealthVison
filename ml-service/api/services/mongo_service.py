@@ -33,7 +33,6 @@ def get_report_by_id(report_id: str):
     report = collection.find_one({"_id": object_id})
     print("Testing DB connection...")
     doc = collection.find_one()
-    print("First document:", doc)
-    print("Mongo result:", report)
+    
 
     return report
