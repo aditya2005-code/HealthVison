@@ -2,7 +2,9 @@ import nodemailer from 'nodemailer';
 
 export const sendEmail = async (options) => {
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465, // Try 465 natively as Render free tiers sometimes block 587 (STARTTLS) but allow 465 (SSL/TLS)
+        secure: true, 
         auth: {
             user: process.env.SMTP_EMAIL,
             pass: process.env.SMTP_PASSWORD,
@@ -12,10 +14,12 @@ export const sendEmail = async (options) => {
         socketTimeout: 60000,
         tls: {
             rejectUnauthorized: false
-        }
+        },
+        logger: true, // Log to console 
+        debug: true   // Include SMTP traffic in the logs
     });
 
-    // Force IPv4
+    // Still force IPv4 just in case
     transporter.set('socket', {
         family: 4
     });
