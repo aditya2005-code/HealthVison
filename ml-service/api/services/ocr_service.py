@@ -7,7 +7,7 @@ import numpy as np
 
 import pytesseract
 
-ss# -----------------------------
+# -----------------------------
 # Try extracting text directly
 # -----------------------------
 def extract_text_from_pdf(pdf_path):
