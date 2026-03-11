@@ -59,13 +59,13 @@ export const updateProfile = async (req, res, next) => {
         }
 
         if (updates.address && typeof updates.address === 'object') {
-            updates.address = { ...user.address, ...updates.address };
+            updates.address = { ...(user.address ? (user.address.toObject ? user.address.toObject() : user.address) : {}), ...updates.address };
         }
         if (updates.emergencyContact && typeof updates.emergencyContact === 'object') {
-            updates.emergencyContact = { ...user.emergencyContact, ...updates.emergencyContact };
+            updates.emergencyContact = { ...(user.emergencyContact ? (user.emergencyContact.toObject ? user.emergencyContact.toObject() : user.emergencyContact) : {}), ...updates.emergencyContact };
         }
         if (updates.name && typeof updates.name === 'object') {
-            updates.name = { ...user.name, ...updates.name };
+            updates.name = { ...(user.name ? (user.name.toObject ? user.name.toObject() : user.name) : {}), ...updates.name };
         }
 
         Object.keys(updates).forEach(key => {
