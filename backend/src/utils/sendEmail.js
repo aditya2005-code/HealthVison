@@ -3,15 +3,24 @@ import nodemailer from 'nodemailer';
 export const sendEmail = async (options) => {
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // required for 465
+        port: 587,
+        secure: false, // true for 465, false for 587
+        requireTLS: true,
         auth: {
             user: process.env.SMTP_EMAIL,
             pass: process.env.SMTP_PASSWORD,
         },
-        connectionTimeout: 30000,
+        connectionTimeout: 60000,
         greetingTimeout: 30000,
-        socketTimeout: 30000,
+        socketTimeout: 60000, // increased timeouts for slower cloud startup
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
+
+    // We can directly dictate the socket configuration for Nodemailer to enforce IPv4
+    transporter.set('socket', {
+        family: 4
     });
 
     await new Promise((resolve, reject) => {
