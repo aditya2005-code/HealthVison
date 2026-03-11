@@ -2,19 +2,21 @@ import nodemailer from 'nodemailer';
 
 export const sendEmail = async (options) => {
     const emailConfig = {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 587,
         secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
+        requireTLS: true, // Force TLS for port 587
         auth: {
             user: process.env.SMTP_EMAIL,
             pass: process.env.SMTP_PASSWORD,
         },
+        tls: {
+            rejectUnauthorized: false // Helps avoid some certificate issues in deployed environments
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
     };
-
-    // Use built-in service for Gmail to avoid Render/Node connection timeouts
-    if (process.env.SMTP_HOST === 'smtp.gmail.com') {
-        emailConfig.service = 'gmail';
-    }
 
     const transporter = nodemailer.createTransport(emailConfig);
 

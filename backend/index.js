@@ -24,6 +24,10 @@ import logger from './src/utils/logger.js';
 dotenv.config();
 
 const app = express();
+
+// Trust proxy for express-rate-limit behind reverse proxies (e.g. Render)
+app.set('trust proxy', 1);
+
 let server;
 
 server = http.createServer(app);
