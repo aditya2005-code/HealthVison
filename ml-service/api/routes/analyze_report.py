@@ -8,6 +8,7 @@ from api.services.file_service import download_pdf
 from api.services.ocr_service import extract_text
 from api.services.llm_feature_extractor import extract_features_with_llm
 from api.services.ml_predictor_service import predict_diseases
+from api.services.medical_explainer_service import generate_medical_explanation
 
 
 router = APIRouter()
@@ -18,7 +19,7 @@ def analyze_report(request: ReportRequest):
 
     try:
 
-        # 1️⃣ Fetch report from MongoDB
+        # Fetch report
         report = get_report_by_id(request.report_id)
 
         if report is None:
@@ -28,12 +29,12 @@ def analyze_report(request: ReportRequest):
 
         print("PDF URL:", file_url)
 
-        # 2️⃣ Download PDF
+        # Download PDF
         pdf_path = download_pdf(file_url)
 
         print("PDF downloaded to:", pdf_path)
 
-        # 3️⃣ OCR Extraction
+        # OCR Extraction
         extracted_text = extract_text(pdf_path)
 
         if not extracted_text or len(extracted_text.strip()) == 0:
@@ -41,26 +42,44 @@ def analyze_report(request: ReportRequest):
 
         print("OCR extraction complete")
 
-        # 4️⃣ LLM Feature Extraction
+        # LLM Feature Extraction
         features = extract_features_with_llm(extracted_text)
-
-        print("Extracted Features:", features)
 
         if "error" in features:
             raise HTTPException(status_code=500, detail="Feature extraction failed")
 
-        # 5️⃣ ML Prediction
+        print("Extracted Features:", features)
+
+        # ML Predictions
         predictions = predict_diseases(features)
 
         print("Predictions:", predictions)
 
-        # 6️⃣ Save results to MongoDB
+        # AI Medical Explanation
+        explanation = generate_medical_explanation(features, predictions)
+
+        print("Medical Explanation:", explanation)
+
+        # Extract fields for schema
+        severity = explanation.get("severity")
+        recommended_doctor = explanation.get("recommended_doctor")
+        summary = explanation.get("medical_summary")
+        chatbot_explanation = explanation.get("chatbot_explanation")
+        suggestions = explanation.get("suggestions", [])
+
+        # Build to schema
         analysis_result = {
             "features": features,
             "predictions": predictions,
+            "severity": severity,
+            "recommendedDoctor": recommended_doctor,
+            "summary": summary,
+            "chatbotExplanation": chatbot_explanation,
+            "suggestions": suggestions,
             "analyzedAt": datetime.utcnow()
         }
 
+        # Update MongoDB
         collection.update_one(
             {"_id": ObjectId(request.report_id)},
             {
@@ -71,11 +90,10 @@ def analyze_report(request: ReportRequest):
             }
         )
 
-        # 7️⃣ API Response
+        
         return {
             "message": "Report analyzed successfully",
-            "features": features,
-            "predictions": predictions
+            "analysis": analysis_result
         }
 
     except Exception as e:
@@ -88,7 +106,7 @@ def analyze_report(request: ReportRequest):
         )
 
 
-# Debug route
+
 @router.get("/debug-report")
 def debug():
 
