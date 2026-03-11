@@ -92,15 +92,8 @@ def extract_text(pdf_path):
 
     text = extract_text_from_pdf(pdf_path)
 
-    # If enough text found, return it
-    if len(text.strip()) > 500:
-
-        print("Text layer detected — OCR not required")
-
-        return text
-
     print("No text layer found — running OCR")
 
     text = extract_text_with_ocr(pdf_path)
-
+    print(f"The Extracted text: {text}")
     return text
