@@ -25,8 +25,8 @@ export default function Header({ toggleSidebar }) {
                 >
                     <Menu className="w-6 h-6" />
                 </button>
-                <Link to="/" className="text-xl md:text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                    HealthVision
+                <Link to="/" className="flex items-center gap-2 transition-colors hover:opacity-90">
+                    <img src="/logo-text.png" alt="HealthVision" className="h-8 auto" />
                 </Link>
             </div>
             <div className="flex space-x-2 md:space-x-4 items-center">
