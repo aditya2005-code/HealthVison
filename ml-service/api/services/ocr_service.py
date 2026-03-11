@@ -7,8 +7,7 @@ import numpy as np
 
 import pytesseract
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-# -----------------------------
+ss# -----------------------------
 # Try extracting text directly
 # -----------------------------
 def extract_text_from_pdf(pdf_path):
@@ -59,11 +58,7 @@ def preprocess_image(image):
 # -----------------------------
 def extract_text_with_ocr(pdf_path):
 
-    images = convert_from_path(
-        pdf_path,
-        dpi=300,
-        poppler_path=r"C:\poppler-25.12.0\Library\bin"
-    )
+    images = convert_from_path(pdf_path, dpi=300)
 
     full_text = ""
 
