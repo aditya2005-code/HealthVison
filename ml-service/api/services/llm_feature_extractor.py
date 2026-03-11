@@ -27,39 +27,63 @@ MODELS = [
 def extract_features_with_llm(text: str):
 
     # limit text size to avoid huge token usage
-    text = text[:12000]
 
     prompt = f"""
-You are a medical report analyzer.
+You are an expert medical laboratory report parser.
 
-Extract laboratory test values from this report.
+Your task is to extract ALL laboratory test results from the medical report.
 
-Return ONLY JSON.
+The report may contain:
+- OCR mistakes
+- spelling errors
+- irregular formatting
+- duplicated sections
+- reference ranges
+- units and notes
 
-Example:
+Carefully analyze the report and extract the actual measured values.
 
-{{
- "creatinine": 1.0,
- "urea": 40,
- "uric_acid": 7,
- "ast": 30,
- "alt": 40,
- "hdl": 30,
- "ldl": 50,
- "glucose_fasting": 80,
- "vitamin_b12": 400,
- "vitamin_d": 150,
- "t3": 1.0,
- "t4": 7.0,
- "tsh": 3.0,
- "hba1c": 10.0
-}}
+Rules:
 
-If a value is not present return null.
+1. Extract EVERY laboratory test result present in the report.
+2. Ignore reference ranges.
+3. Extract the measured numeric value only.
+4. Keep the laboratory test name as the key.
+5. Normalize test names to lowercase with underscores.
+   Example:
+   "Glucose Fasting" → glucose_fasting
+   "AST (SGOT)" → ast
+   "ALT (SGPT)" → alt
+6. If a value cannot be determined return null.
+7. Do NOT include explanations.
+8. Return ONLY valid JSON.
 
+Expected JSON format:
+    
+    # Return ONLY JSON.
+
+# Example:
+
+# {{
+#  "creatinine": 1.0,
+#  "urea": 40,
+#  "uric_acid": 7,
+#  "ast": 30,
+#  "alt": 40,
+#  "hdl": 30,
+#  "ldl": 50,
+#  "glucose_fasting": 80,
+#  "vitamin_b12": 400,
+#  "vitamin_d": 150,
+#  "t3": 1.0,
+#  "t4": 7.0,
+#  "tsh": 3.0,
+#  "hba1c": 10.0
+# }}
 Medical Report:
 {text}
 """
+
 
     # Try each model until one succeeds
     for model_name in MODELS:
