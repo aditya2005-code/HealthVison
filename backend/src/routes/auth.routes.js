@@ -3,8 +3,11 @@ import {
     loginUser,
     registerUser,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    sendVerificationOtp,
+    verifyEmailOtp
 } from "../controllers/auth.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
 import {
     registerValidation,
     loginValidation,
@@ -154,5 +157,9 @@ router.post(
     handleValidationErrors,
     resetPassword
 );
+
+// Email OTP verification (protected)
+router.post("/send-otp", protect, sendVerificationOtp);
+router.post("/verify-otp", protect, verifyEmailOtp);
 
 export default router;

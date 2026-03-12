@@ -57,6 +57,24 @@ const resetPassword = async (token, password) => {
     }
 };
 
+const sendOtp = async () => {
+    try {
+        const response = await api.post('/auth/send-otp');
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : { message: 'Network Error' };
+    }
+};
+
+const verifyOtp = async (otp) => {
+    try {
+        const response = await api.post('/auth/verify-otp', { otp });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : { message: 'Network Error' };
+    }
+};
+
 const authService = {
     login,
     register,
@@ -65,6 +83,8 @@ const authService = {
     isTokenExpired,
     forgotPassword,
     resetPassword,
+    sendOtp,
+    verifyOtp,
 };
 
 export default authService;

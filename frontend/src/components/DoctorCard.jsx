@@ -8,9 +8,17 @@ export default function DoctorCard({ doctor }) {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-2xl">
-                            {doctor.name.charAt(4)}
-                        </div>
+                        {doctor.avatarUrl ? (
+                            <img
+                                src={doctor.avatarUrl}
+                                alt={doctor.name}
+                                className="w-16 h-16 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-2xl">
+                                {doctor.name.charAt(0)}
+                            </div>
+                        )}
                         <div>
                             <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{doctor.name}</h3>
                             <p className="text-blue-600 font-medium text-sm">{doctor.specialization}</p>

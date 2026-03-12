@@ -27,7 +27,8 @@ export const getCurrentUser = async (req, res, next) => {
                 currentMedications: user.currentMedications,
                 emergencyContact: user.emergencyContact,
                 insurance: user.insurance,
-                avatarUrl: user.avatarUrl
+                avatarUrl: user.avatarUrl,
+                isVerified: user.isVerified
             }
         });
     } catch (error) {
@@ -39,7 +40,7 @@ export const updateProfile = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const updates = req.body;
-        
+
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: "User not found." });
@@ -96,7 +97,8 @@ export const updateProfile = async (req, res, next) => {
                 currentMedications: user.currentMedications,
                 emergencyContact: user.emergencyContact,
                 insurance: user.insurance,
-                avatarUrl: user.avatarUrl
+                avatarUrl: user.avatarUrl,
+                isVerified: user.isVerified
             }
         });
     } catch (error) {

@@ -153,7 +153,7 @@ const seedDoctors = async () => {
         for (const doc of doctors) {
             // Create a unique clean email: remove "Dr.", trim, lowercase, replace spaces with dots
             const cleanName = doc.name.replace(/dr\.\s+/i, '').trim().toLowerCase();
-            const email = `${cleanName.split(' ').join('.')}@healthvision.com`;
+            const email = `${cleanName.split(' ').join('.')}@healthviz.in`;
 
             // Create a User account for the doctor
             const user = await User.create({
