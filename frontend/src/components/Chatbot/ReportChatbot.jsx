@@ -47,7 +47,6 @@ const ReportChatbot = ({ reportId, reportName }) => {
                 setMessages(prev => [...prev, botMsg]);
             }
         } catch (error) {
-            console.error("Error sending message:", error);
             toast.error("Failed to send message");
         } finally {
             setLoading(false);

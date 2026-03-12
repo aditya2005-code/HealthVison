@@ -3,6 +3,7 @@ import pytesseract
 from pdf2image import convert_from_path
 import cv2
 import numpy as np
+import os
 
 import pytesseract
 
@@ -25,7 +26,7 @@ def extract_text_from_pdf(pdf_path):
                     full_text += text + "\n"
 
     except Exception as e:
-        print("PDF text extraction failed:", e)
+        pass
 
     return full_text
 
@@ -66,9 +67,6 @@ def extract_text_with_ocr(pdf_path):
             total_pages = len(pdf.pages)
 
             for i in range(total_pages):
-
-                print(f"OCR processing page {i+1}")
-
                 # convert only ONE page at a time (memory safe)
                 images = convert_from_path(
                     pdf_path,
@@ -89,29 +87,37 @@ def extract_text_with_ocr(pdf_path):
                 full_text += text + "\n"
 
     except Exception as e:
-        print("OCR extraction failed:", e)
+        pass
 
     return full_text
 
 
+def extract_text_from_image(image_path):
+    try:
+        image = cv2.imread(image_path)
+        if image is None:
+            raise Exception("Failed to load image with OpenCV")
+            
+        processed = preprocess_image(image)
+        text = pytesseract.image_to_string(processed, config="--oem 3 --psm 4")
+        return text
+    except Exception as e:
+        return ""
+
 # -----------------------------
 # Hybrid extractor
 # -----------------------------
-def extract_text(pdf_path):
+def extract_text(file_path):
+    ext = os.path.splitext(file_path)[1].lower()
+    
+    if ext == ".pdf":
+        text = extract_text_from_pdf(file_path)
 
-    print("Trying direct PDF extraction...")
+        if text.strip():
+            return text
 
-    text = extract_text_from_pdf(pdf_path)
-
-    # only run OCR if no text layer exists
-    if text.strip():
-        print("Text layer found — skipping OCR")
-        return text
-
-    print("No text layer found — running OCR")
-
-    text = extract_text_with_ocr(pdf_path)
-
-    print("Extracted text length:", len(text))
+        text = extract_text_with_ocr(file_path)
+    else:
+        text = extract_text_from_image(file_path)
 
     return text

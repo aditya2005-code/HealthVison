@@ -247,53 +247,46 @@ export const analyzeReport = async (req, res) => {
         report.status = 'processing';
         await report.save();
 
-        // Perform ML analysis
-        const analysisResult = await analyzeReportML(report.fileUrl, report.fileType);
+        // Perform ML analysis by pinging the remote microservice
+        const analysisResult = await analyzeReportML(report._id);
 
-        // Update report with analysis results
         if (analysisResult.success) {
-            report.extractedText = analysisResult.extractedText;
-            report.analysisResult = {
-                analysis: analysisResult.analysis,
-                insights: analysisResult.insights,
-                recommendations: analysisResult.recommendations,
-                analyzedAt: new Date()
-            };
-            report.status = 'completed';
+            // The remote service directly updates the DB.
+            // We can fetch the updated report to send back to the frontend.
+            const updatedReport = await Report.findById(report._id);
+            
+            res.status(200).json({
+                message: 'Report analyzed successfully',
+                report: {
+                    id: updatedReport._id,
+                    fileName: updatedReport.fileName,
+                    status: updatedReport.status,
+                    analysisResult: updatedReport.analysisResult,
+                    updatedAt: updatedReport.updatedAt
+                },
+                mlApiAvailable: true
+            });
         } else {
-            // ML API not available or failed
-            report.status = analysisResult.mlApiAvailable ? 'failed' : 'pending';
+            // Update report to failed if ML service ping failed
+            report.status = 'failed';
             report.analysisResult = {
                 error: analysisResult.message,
                 mlApiAvailable: analysisResult.mlApiAvailable,
                 attemptedAt: new Date()
             };
-        }
+            await report.save();
 
-        await report.save();
-
-        // Prepare response
-        const response = {
-            message: analysisResult.success
-                ? 'Report analyzed successfully'
-                : 'Analysis failed - ML API unavailable',
-            report: {
-                id: report._id,
-                fileName: report.fileName,
-                status: report.status,
-                extractedText: report.extractedText,
-                analysisResult: report.analysisResult,
-                updatedAt: report.updatedAt
-            },
-            mlApiAvailable: analysisResult.mlApiAvailable
-        };
-
-        // Return appropriate status code
-        if (analysisResult.success) {
-            res.status(200).json(response);
-        } else {
-            // Return 503 Service Unavailable if ML API is not configured/available
-            res.status(503).json(response);
+            res.status(503).json({
+                message: `Analysis failed: ${analysisResult.message}`,
+                report: {
+                    id: report._id,
+                    fileName: report.fileName,
+                    status: report.status,
+                    analysisResult: report.analysisResult,
+                    updatedAt: report.updatedAt
+                },
+                mlApiAvailable: analysisResult.mlApiAvailable
+            });
         }
 
     } catch (error) {

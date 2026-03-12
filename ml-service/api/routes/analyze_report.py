@@ -4,7 +4,7 @@ from datetime import datetime
 
 from api.schemas.request_schema import ReportRequest
 from api.services.mongo_service import collection, get_report_by_id
-from api.services.file_service import download_pdf
+from api.services.file_service import download_file
 from api.services.ocr_service import extract_text
 from api.services.llm_feature_extractor import extract_features_with_llm
 from api.services.ml_predictor_service import predict_diseases
@@ -18,7 +18,6 @@ router = APIRouter()
 def analyze_report(request: ReportRequest):
 
     try:
-
         # Fetch report
         report = get_report_by_id(request.report_id)
 
@@ -27,20 +26,14 @@ def analyze_report(request: ReportRequest):
 
         file_url = report["fileUrl"]
 
-        print("PDF URL:", file_url)
-
-        # Download PDF
-        pdf_path = download_pdf(file_url)
-
-        print("PDF downloaded to:", pdf_path)
+        # Download File (PDF or Image)
+        file_path = download_file(file_url)
 
         # OCR Extraction
-        extracted_text = extract_text(pdf_path)
+        extracted_text = extract_text(file_path)
 
         if not extracted_text or len(extracted_text.strip()) == 0:
             raise HTTPException(status_code=500, detail="OCR extraction failed")
-
-        print("OCR extraction complete")
 
         # LLM Feature Extraction
         features = extract_features_with_llm(extracted_text)
@@ -48,17 +41,11 @@ def analyze_report(request: ReportRequest):
         if "error" in features:
             raise HTTPException(status_code=500, detail="Feature extraction failed")
 
-        print("Extracted Features:", features)
-
         # ML Predictions
         predictions = predict_diseases(features)
 
-        print("Predictions:", predictions)
-
         # AI Medical Explanation
         explanation = generate_medical_explanation(features, predictions)
-
-        print("Medical Explanation:", explanation)
 
         # Extract fields for schema
         severity = explanation.get("severity")
@@ -90,26 +77,14 @@ def analyze_report(request: ReportRequest):
             }
         )
 
-        
         return {
             "message": "Report analyzed successfully",
             "analysis": analysis_result
         }
 
     except Exception as e:
-
-        print("Analysis error:", e)
-
+        # Log to error monitoring in a real system
         raise HTTPException(
             status_code=500,
             detail="Report analysis failed"
         )
-
-
-
-@router.get("/debug-report")
-def debug():
-
-    doc = collection.find_one()
-
-    return {"doc": str(doc)}

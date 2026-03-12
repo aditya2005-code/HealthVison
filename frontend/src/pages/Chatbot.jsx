@@ -26,12 +26,9 @@ const Chatbot = () => {
                     timestamp: msg.timestamp // ideally response timestamp
                 }))).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-                // The above mapping is wrong because history returns objects with message AND response.
-                // We need to interleave them or flatten them correctly.
-                // Let's re-map directly from the chat objects.
-
                 const historyHelper = [];
-                response.data.forEach(chat => {
+                // backend returns newest first, so we reverse it to process chronologically
+                [...response.data].reverse().forEach(chat => {
                     historyHelper.push({
                         text: chat.message,
                         isUser: true,
@@ -41,15 +38,14 @@ const Chatbot = () => {
                         historyHelper.push({
                             text: chat.response,
                             isUser: false,
-                            timestamp: chat.createdAt || chat.timestamp // Approximation
+                            timestamp: chat.createdAt || chat.timestamp
                         });
                     }
                 });
-                setMessages(historyHelper.reverse());
+                setMessages(historyHelper);
             }
         } catch (error) {
-            console.error("Error loading chat history:", error);
-            // toast.error("Failed to load chat history");
+            // Error handled by loading state
         } finally {
             setLoading(false);
         }
