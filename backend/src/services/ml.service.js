@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import logger from '../utils/logger.js';
 
 dotenv.config();
 
@@ -117,50 +118,54 @@ export const analyzeReportText = async (extractedText, metadata = {}) => {
 };
 
 /**
- * Complete report analysis pipeline
- * @param {string} filePath - Path to the uploaded file
- * @param {string} fileType - MIME type of the file
- * @returns {Promise<Object>} - Complete analysis results
+ * Analyze report using deployed ML microservice
+ * @param {string} reportId - ID of the report to analyze
+ * @returns {Promise<Object>} - Status response
  */
-export const analyzeReport = async (filePath, fileType) => {
+export const analyzeReport = async (reportId) => {
     try {
-        // Step 1: Extract text from the report
-        const extractionResult = await extractTextFromReport(filePath, fileType);
+        const ML_ANALYSIS_URL = (process.env.ML_ANALYSIS_URL || '').replace(/\/$/, '');
         
-        if (!extractionResult.success) {
-            return {
-                success: false,
-                message: extractionResult.message,
-                extractedText: null,
-                analysis: null,
-                mlApiAvailable: false
-            };
+        if (!ML_ANALYSIS_URL) {
+            logger.warn('ML_ANALYSIS_URL not configured');
+            return { success: false, message: 'ML Analysis service not configured' };
         }
-
-        // Step 2: Analyze the extracted text
-        const analysisResult = await analyzeReportText(
-            extractionResult.extractedText,
-            extractionResult.metadata
+        
+        const payload = { report_id: reportId.toString() };
+        logger.info(`Sending analysis request to ${ML_ANALYSIS_URL} with payload: %o`, payload);
+        
+        const response = await axios.post(
+            ML_ANALYSIS_URL, 
+            payload,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout: 120000 
+            }
         );
 
+        logger.info(`ML Analysis Response from ${ML_ANALYSIS_URL}: %o`, response.data);
+
+
         return {
-            success: analysisResult.success,
-            message: analysisResult.success ? 'Analysis completed successfully' : analysisResult.message,
-            extractedText: extractionResult.extractedText,
-            analysis: analysisResult.analysis,
-            insights: analysisResult.insights || [],
-            recommendations: analysisResult.recommendations || [],
+            success: true,
+            message: response.data.message || 'Analysis completed successfully',
+            analysis: response.data.analysis, // This is the nested object from ref.txt
             mlApiAvailable: true
         };
     } catch (error) {
-        console.error('Error in complete report analysis:', error.message);
+        logger.error('Error in complete report analysis: %s', error.message);
+        if (error.response) {
+            logger.error('ML Service Error Response: %d %o', error.response.status, error.response.data);
+        } else if (error.request) {
+            logger.error('ML Service No Response Received: %o', error.request);
+        }
         
         return {
             success: false,
-            message: 'Error during report analysis',
-            extractedText: null,
-            analysis: null,
-            mlApiAvailable: false,
+            message: error.response?.data?.detail || error.response?.data?.message || 'Error during report analysis',
+            mlApiAvailable: error.code !== 'ECONNREFUSED' && error.code !== 'ENOTFOUND',
             error: error.message
         };
     }

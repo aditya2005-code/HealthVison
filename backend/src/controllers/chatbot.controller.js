@@ -1,5 +1,7 @@
 import { ChatMessage } from "../models/chat.model.js";
 import Report from "../models/report.model.js";
+import axios from 'axios';
+import logger from '../utils/logger.js';
 import {
     isValidObjectId,
     validatePagination,
@@ -8,17 +10,13 @@ import {
     validateEnum
 } from "../utils/validation.utils.js";
 
-/**
- * Send a message to the chatbot with report context awareness
- * POST /api/chatbot/message
- */
+ 
 
 export const sendMessage = async (req, res, next) => {
     try {
         const { message, urgency, reportId, context } = req.body;
         const userId = req.user.id;
 
-        // Input validation
         if (!message || typeof message !== 'string') {
             return res.status(400).json({
                 success: false,
@@ -40,25 +38,22 @@ export const sendMessage = async (req, res, next) => {
             });
         }
 
-        // Validate urgency if provided
         const validUrgencies = ['Low', 'Medium', 'High'];
         const messageUrgency = validateEnum(urgency, validUrgencies, 'Low');
 
-        // Validate context if provided
         const validContexts = ['general', 'report_analysis', 'appointment', 'medical_query'];
         const messageContext = validateEnum(context, validContexts, 'general');
 
         let relatedReports = [];
         let reportContext = '';
+        let report = null;
         let metadata = {
             reportIds: [],
             keywords: extractKeywords(message),
             sentiment: 'neutral'
         };
 
-        // If reportId is provided, fetch and validate the report
         if (reportId) {
-            // Validate MongoDB ObjectId format
             if (!isValidObjectId(reportId)) {
                 return res.status(400).json({
                     success: false,
@@ -67,7 +62,7 @@ export const sendMessage = async (req, res, next) => {
             }
 
             try {
-                const report = await Report.findOne({
+                report = await Report.findOne({
                     _id: reportId,
                     userId: userId
                 }).select('fileName status analysisResult extractedText createdAt').lean();
@@ -79,7 +74,6 @@ export const sendMessage = async (req, res, next) => {
                     });
                 }
 
-                // Check if report has been analyzed
                 if (report.status !== 'completed') {
                     return res.status(400).json({
                         success: false,
@@ -91,7 +85,6 @@ export const sendMessage = async (req, res, next) => {
                 relatedReports.push(reportId);
                 metadata.reportIds.push(reportId);
 
-                // Build context from report analysis
                 reportContext = buildReportContext(report);
 
             } catch (error) {
@@ -104,15 +97,14 @@ export const sendMessage = async (req, res, next) => {
             }
         }
 
-        // Generate AI response with report context
         let responseText = await generateChatbotResponse(
             message,
             messageUrgency,
             reportContext,
-            messageContext
+            messageContext,
+            reportId && report ? report.analysisResult : null
         );
 
-        // Create chat message with all metadata
         const chatMessage = await ChatMessage.create({
             userId,
             message: message.trim(),
@@ -123,7 +115,6 @@ export const sendMessage = async (req, res, next) => {
             metadata
         });
 
-        // Populate related reports for response
         await chatMessage.populate('relatedReports', 'fileName status createdAt');
 
         res.status(201).json({
@@ -134,7 +125,6 @@ export const sendMessage = async (req, res, next) => {
     } catch (error) {
         console.error('Error in sendMessage:', error);
 
-        // Handle specific MongoDB errors
         if (error.name === 'ValidationError') {
             return res.status(400).json({
                 success: false,
@@ -154,18 +144,12 @@ export const sendMessage = async (req, res, next) => {
     }
 };
 
-/*
- * Get chat history with pagination and filtering
- * GET /api/chatbot/history
- */
+ 
 
 export const getHistory = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        // Pagination parameters with validation
         const { page, limit, skip } = validatePagination(req.query.page, req.query.limit);
-
-        // Optional filters
         const { context, urgency, startDate, endDate } = req.query;
 
         // Build query
@@ -221,10 +205,7 @@ export const getHistory = async (req, res, next) => {
 };
 
 
-/**
- * Get chat messages related to a specific report
- * GET /api/chatbot/report/:reportId
- */
+ 
 export const getReportConversations = async (req, res, next) => {
     try {
         const userId = req.user.id;
@@ -277,10 +258,7 @@ export const getReportConversations = async (req, res, next) => {
     }
 };
 
-/**
- * Delete a chat message
- * DELETE /api/chatbot/message/:messageId
- */
+ 
 export const deleteMessage = async (req, res, next) => {
     try {
         const userId = req.user.id;
@@ -317,7 +295,6 @@ export const deleteMessage = async (req, res, next) => {
     }
 };
 
-// ============= Helper Functions =============
 
 /**
  * Build context string from report analysis
@@ -326,14 +303,23 @@ function buildReportContext(report) {
     let context = `Report: ${report.fileName}\n`;
 
     if (report.analysisResult) {
+        // The ML service saves these fields directly under analysisResult
+        if (report.analysisResult.summary) {
+            context += `Summary: ${report.analysisResult.summary}\n`;
+        }
+        if (report.analysisResult.severity) {
+            context += `Severity: ${report.analysisResult.severity}\n`;
+        }
+        if (report.analysisResult.recommendedDoctor) {
+            context += `Recommended Doctor: ${report.analysisResult.recommendedDoctor}\n`;
+        }
+        if (report.analysisResult.chatbotExplanation) {
+            context += `Explanation: ${report.analysisResult.chatbotExplanation}\n`;
+        }
+        
+        // Handle legacy format if any
         if (report.analysisResult.analysis) {
             context += `Analysis: ${report.analysisResult.analysis}\n`;
-        }
-        if (report.analysisResult.insights) {
-            context += `Insights: ${report.analysisResult.insights}\n`;
-        }
-        if (report.analysisResult.recommendations) {
-            context += `Recommendations: ${report.analysisResult.recommendations}\n`;
         }
     }
 
@@ -349,22 +335,65 @@ function buildReportContext(report) {
 /**
  * Generate chatbot response based on message and context
  */
-async function generateChatbotResponse(message, urgency, reportContext, context) {
+async function generateChatbotResponse(message, urgency, reportContext, context, reportAnalysisResult = null) {
     let responseText = '';
 
-    // Handle urgent messages
+    if (reportAnalysisResult && (reportAnalysisResult.summary || reportAnalysisResult.features || reportAnalysisResult.analysis)) {
+        try {
+            const CHATBOT_URL = (process.env.CHATBOT_API_URL || '').replace(/\/$/, '');
+            
+            if (!CHATBOT_URL) {
+                logger.warn('CHATBOT_API_URL not configured, skipping microservice call');
+                throw new Error('Chatbot service not configured');
+            }
+            
+            const analysisPayload = {
+                predictions: {},
+                severity: "Unknown",
+                summary: "No summary available",
+                ...reportAnalysisResult,
+                features: {
+                    raw_output: typeof reportAnalysisResult.features === 'object' 
+                        ? JSON.stringify(reportAnalysisResult.features) 
+                        : (reportAnalysisResult.summary || "Medical report features")
+                }
+            };
+
+            const payload = {
+                analysis: analysisPayload,
+                question: message
+            };
+
+            logger.info(`Pinging chatbot ML microservice at ${CHATBOT_URL}`);
+            logger.info('Chatbot payload: %o', payload);
+            
+            const response = await axios.post(CHATBOT_URL, payload, {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 60000 // Increased timeout to 60s for LLM processing
+            });
+
+            if (response.data && response.data.answer) {
+                return response.data.answer;
+            }
+        } catch (error) {
+            logger.error('Error pinging chatbot microservice: %s', error.message);
+            if (error.response) {
+                logger.error('Microservice response data: %o', error.response.data);
+            }
+            // Fallthrough to static response on error
+        }
+    }
+
     if (urgency === 'High') {
         responseText = "This sounds urgent. If this is a medical emergency, please call emergency services immediately or visit the nearest hospital.\n\n";
     }
 
-    // Context-aware responses
     if (reportContext) {
         responseText += `I've reviewed your report. Based on the information:\n\n`;
         responseText += `Your question: "${message}"\n\n`;
         responseText += `Report Context:\n${reportContext}\n\n`;
         responseText += `Please note: This is an AI assistant. For medical advice, always consult with your healthcare provider.`;
     } else {
-        // General response when no report context
         switch (context) {
             case 'appointment':
                 responseText += `Regarding appointments: ${message}\n\nI can help you with appointment-related queries. `;
@@ -381,11 +410,7 @@ async function generateChatbotResponse(message, urgency, reportContext, context)
     return responseText;
 }
 
-/**
- * Extract keywords from message for metadata
- */
 function extractKeywords(message) {
-    // Simple keyword extraction (can be enhanced with NLP)
     const commonWords = ['the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of', 'as', 'by', 'my', 'i', 'me', 'what', 'how', 'when', 'where', 'why'];
 
     const words = message.toLowerCase()
