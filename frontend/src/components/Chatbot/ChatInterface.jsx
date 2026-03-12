@@ -47,6 +47,18 @@ const ChatInterface = ({ messages, onSendMessage, loading }) => {
         }
     };
 
+    const formatMessage = (text) => {
+        if (!text) return null;
+
+        const parts = text.split(/(\*\*.*?\*\*)/g);
+        return parts.map((part, index) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>;
+            }
+            return part;
+        });
+    };
+
     return (
         <div className="flex flex-col h-[600px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {/* Header */}
@@ -120,7 +132,7 @@ const ChatInterface = ({ messages, onSendMessage, loading }) => {
                                     ? 'bg-blue-600 text-white rounded-tr-none'
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm'
                                     }`}>
-                                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                                    <div className="text-sm whitespace-pre-wrap">{formatMessage(msg.text)}</div>
                                 </div>
                                 <div className={`text-xs text-gray-400 mt-1 flex items-center ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
                                     <Clock className="w-3 h-3 mr-1" />

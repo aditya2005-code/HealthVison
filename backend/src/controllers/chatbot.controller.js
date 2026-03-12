@@ -380,7 +380,34 @@ async function generateChatbotResponse(message, urgency, reportContext, context,
             if (error.response) {
                 logger.error('Microservice response data: %o', error.response.data);
             }
-            // Fallthrough to static response on error
+            // Fallthrough to static response or general chatbot on error
+        }
+    } else {
+        // Handle general chat via the mentioned endpoint if no report context
+        try {
+            const GENERAL_CHATBOT_URL = (process.env.CHATBOT_GENERAL_URL || '').replace(/\/$/, '');
+            
+            if (GENERAL_CHATBOT_URL) {
+                const payload = {
+                    question: message
+                };
+
+                logger.info(`Pinging general chatbot at ${GENERAL_CHATBOT_URL}`);
+                
+                const response = await axios.post(GENERAL_CHATBOT_URL, payload, {
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 60000
+                });
+
+                if (response.data && response.data.answer) {
+                    return response.data.answer;
+                }
+            }
+        } catch (error) {
+            logger.error('Error pinging general chatbot service: %s', error.message);
+            if (error.response) {
+                logger.error('General chatbot response data: %o', error.response.data);
+            }
         }
     }
 
