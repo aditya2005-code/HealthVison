@@ -36,3 +36,23 @@ Instructions:
 - Encourage consulting a doctor if needed.
 """
     return prompt
+
+
+def build_general_prompt(question: str):
+
+    prompt = f"""
+You are a knowledgeable medical assistant.
+
+The user is asking a general health question.
+
+Question:
+{question}
+
+Instructions:
+- Explain clearly in simple language.
+- Keep answers medically accurate.
+- Do not diagnose diseases.
+- If necessary, advise consulting a doctor.
+"""
+
+    return prompt
