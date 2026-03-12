@@ -2,11 +2,17 @@ import { Doctor } from "../models/doctor.model.js";
 
 export const getAllDoctors = async (req, res, next) => {
     try {
-        const doctors = await Doctor.find({});
+        const doctors = await Doctor.find({}).populate('userId', 'avatarUrl');
+        // Merge user's avatarUrl into each doctor object
+        const data = doctors.map(doc => {
+            const d = doc.toObject();
+            d.avatarUrl = d.userId?.avatarUrl || d.avatarUrl || null;
+            return d;
+        });
         res.status(200).json({
             success: true,
-            count: doctors.length,
-            data: doctors,
+            count: data.length,
+            data,
         });
     } catch (error) {
         next(error);
@@ -15,7 +21,7 @@ export const getAllDoctors = async (req, res, next) => {
 
 export const getDoctorById = async (req, res, next) => {
     try {
-        const doctor = await Doctor.findById(req.params.id);
+        const doctor = await Doctor.findById(req.params.id).populate('userId', 'avatarUrl');
 
         if (!doctor) {
             return res.status(404).json({
@@ -24,12 +30,14 @@ export const getDoctorById = async (req, res, next) => {
             });
         }
 
+        const d = doctor.toObject();
+        d.avatarUrl = d.userId?.avatarUrl || d.avatarUrl || null;
+
         res.status(200).json({
             success: true,
-            data: doctor,
+            data: d,
         });
     } catch (error) {
-        // Check for invalid ID format
         if (error.name === "CastError") {
             return res.status(404).json({
                 success: false,
