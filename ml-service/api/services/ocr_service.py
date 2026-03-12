@@ -4,8 +4,8 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
-
 import pytesseract
+
 
 # -----------------------------
 # Try extracting text directly
@@ -58,22 +58,38 @@ def preprocess_image(image):
 # -----------------------------
 def extract_text_with_ocr(pdf_path):
 
-    images = convert_from_path(pdf_path, dpi=300)
-
     full_text = ""
 
-    for i, image in enumerate(images):
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
 
-        print(f"OCR processing page {i+1}")
+            total_pages = len(pdf.pages)
 
-        processed = preprocess_image(image)
+            for i in range(total_pages):
 
-        text = pytesseract.image_to_string(
-            processed,
-            config="--oem 3 --psm 4"
-        )
+                print(f"OCR processing page {i+1}")
 
-        full_text += text + "\n"
+                # convert only ONE page at a time (memory safe)
+                images = convert_from_path(
+                    pdf_path,
+                    dpi=200,
+                    first_page=i + 1,
+                    last_page=i + 1
+                )
+
+                image = images[0]
+
+                processed = preprocess_image(image)
+
+                text = pytesseract.image_to_string(
+                    processed,
+                    config="--oem 3 --psm 4"
+                )
+
+                full_text += text + "\n"
+
+    except Exception as e:
+        print("OCR extraction failed:", e)
 
     return full_text
 
@@ -87,8 +103,15 @@ def extract_text(pdf_path):
 
     text = extract_text_from_pdf(pdf_path)
 
+    # only run OCR if no text layer exists
+    if text.strip():
+        print("Text layer found — skipping OCR")
+        return text
+
     print("No text layer found — running OCR")
 
     text = extract_text_with_ocr(pdf_path)
-    print(f"The Extracted text: {text}")
+
+    print("Extracted text length:", len(text))
+
     return text
