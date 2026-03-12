@@ -127,6 +127,12 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailOtp: String,
+  emailOtpExpire: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date
 }, {
@@ -160,6 +166,22 @@ userSchema.methods.getResetPasswordToken = function () {
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
+};
+
+userSchema.methods.generateEmailOtp = function () {
+  // Generate a 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Hash and store it
+  this.emailOtp = crypto
+    .createHash('sha256')
+    .update(otp)
+    .digest('hex');
+
+  // Valid for 10 minutes
+  this.emailOtpExpire = Date.now() + 10 * 60 * 1000;
+
+  return otp;
 };
 
 export const User = mongoose.model("User", userSchema);

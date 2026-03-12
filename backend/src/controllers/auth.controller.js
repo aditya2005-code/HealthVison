@@ -61,6 +61,28 @@ export const registerUser = async (req, res, next) => {
       avatarUrl: uploadedAvatarUrl
     });
 
+    // Send email OTP for verification
+    const otp = user.generateEmailOtp();
+    await user.save({ validateBeforeSave: false });
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Verify your HealthVision email',
+        message: `Your email verification OTP is: ${otp}. It expires in 10 minutes.`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
+            <h2 style="color:#2563eb">Verify your email</h2>
+            <p>Welcome to HealthVision! Use the OTP below to verify your email address.</p>
+            <div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#1d4ed8;text-align:center;padding:16px 0">${otp}</div>
+            <p style="color:#6b7280;font-size:13px">This OTP expires in <strong>10 minutes</strong>. If you didn't sign up, please ignore this email.</p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error('Failed to send verification OTP:', emailErr);
+      // Don't block registration if email fails
+    }
+
     if (role === 'doctor') {
       const { Doctor } = await import("../models/doctor.model.js");
       await Doctor.create({
@@ -74,6 +96,7 @@ export const registerUser = async (req, res, next) => {
 
     return res.status(201).json({
       message: "User registered successfully.",
+      requiresVerification: true,
       token,
       user: {
         id: user._id,
@@ -93,9 +116,65 @@ export const registerUser = async (req, res, next) => {
         currentMedications: user.currentMedications,
         emergencyContact: user.emergencyContact,
         insurance: user.insurance,
-        avatarUrl: user.avatarUrl
+        avatarUrl: user.avatarUrl,
+        isVerified: user.isVerified
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const sendVerificationOtp = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
+
+    const otp = user.generateEmailOtp();
+    await user.save({ validateBeforeSave: false });
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Verify your HealthVision email',
+      message: `Your email verification OTP is: ${otp}. It expires in 10 minutes.`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
+          <h2 style="color:#2563eb">Verify your email</h2>
+          <p>Use the OTP below to verify your HealthVision email address.</p>
+          <div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#1d4ed8;text-align:center;padding:16px 0">${otp}</div>
+          <p style="color:#6b7280;font-size:13px">This OTP expires in <strong>10 minutes</strong>.</p>
+        </div>
+      `
+    });
+
+    return res.status(200).json({ message: 'OTP sent to your email' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyEmailOtp = async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+    if (!otp) return res.status(400).json({ message: 'OTP is required' });
+
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    const user = await User.findOne({
+      _id: req.user.id,
+      emailOtp: hashedOtp,
+      emailOtpExpire: { $gt: Date.now() }
+    });
+
+    if (!user) return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+    user.isVerified = true;
+    user.emailOtp = undefined;
+    user.emailOtpExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({ message: 'Email verified successfully' });
   } catch (error) {
     next(error);
   }

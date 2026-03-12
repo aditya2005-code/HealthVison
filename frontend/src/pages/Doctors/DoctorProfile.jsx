@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, Activity, Save, Camera, ArrowLeft, GraduationCap, Briefcase, IndianRupee, Notebook } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Activity, Save, Camera, ArrowLeft, GraduationCap, Briefcase, IndianRupee, Notebook, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../services/user.service';
 import doctorService from '../../services/doctor.service';
+import authService from '../../services/auth.service';
 import Avatar from '../../components/ui/Avatar';
 import CropModal from '../../components/ui/CropModal';
 import toast from 'react-hot-toast';
@@ -12,6 +13,10 @@ export default function DoctorProfile() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [imageToCrop, setImageToCrop] = useState(null);
+    const [isVerified, setIsVerified] = useState(true);
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpValue, setOtpValue] = useState('');
+    const [otpLoading, setOtpLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: { first: '', last: '' },
         email: '',
@@ -63,6 +68,7 @@ export default function DoctorProfile() {
                         country: data.address?.country || ''
                     }
                 }));
+                setIsVerified(data.isVerified ?? true);
 
                 const docProfile = await doctorService.getMyProfile();
                 if (docProfile && docProfile.data) {
@@ -148,6 +154,38 @@ export default function DoctorProfile() {
         }
     };
 
+    const handleSendOtp = async () => {
+        setOtpLoading(true);
+        try {
+            await authService.sendOtp();
+            setOtpSent(true);
+            toast.success('OTP sent to your email!');
+        } catch (err) {
+            toast.error(err.message || 'Failed to send OTP');
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otpValue || otpValue.length !== 6) {
+            toast.error('Please enter the 6-digit OTP');
+            return;
+        }
+        setOtpLoading(true);
+        try {
+            await authService.verifyOtp(otpValue);
+            setIsVerified(true);
+            setOtpSent(false);
+            setOtpValue('');
+            toast.success('Email verified successfully!');
+        } catch (err) {
+            toast.error(err.message || 'Invalid or expired OTP');
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
     if (loading) return (
         <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -156,6 +194,66 @@ export default function DoctorProfile() {
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            {/* Email Verification Banner */}
+            {!isVerified && (
+                <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                            <p className="font-semibold text-amber-800">Verify your email address</p>
+                            <p className="text-sm text-amber-700 mt-0.5">
+                                Your email <span className="font-medium">{formData.email}</span> is not verified.
+                                Verify it to ensure you receive important notifications.
+                            </p>
+                            {!otpSent ? (
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={otpLoading}
+                                    className="mt-3 px-4 py-1.5 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                                >
+                                    {otpLoading ? 'Sending...' : 'Send OTP'}
+                                </button>
+                            ) : (
+                                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={6}
+                                        value={otpValue}
+                                        onChange={e => setOtpValue(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="Enter 6-digit OTP"
+                                        className="px-3 py-1.5 border border-amber-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 w-40 tracking-widest"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleVerifyOtp}
+                                        disabled={otpLoading}
+                                        className="px-4 py-1.5 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                                    >
+                                        {otpLoading ? 'Verifying...' : 'Verify'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSendOtp}
+                                        disabled={otpLoading}
+                                        className="text-sm text-amber-700 hover:underline"
+                                    >
+                                        Resend OTP
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isVerified && (
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <p className="text-sm text-green-700 font-medium">Email verified</p>
+                </div>
+            )}
             <div className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">

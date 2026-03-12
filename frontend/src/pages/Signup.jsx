@@ -6,6 +6,7 @@ import authService from '../services/auth.service';
 
 const Signup = () => {
     const navigate = useNavigate();
+    const [step, setStep] = useState('form'); // 'form' | 'otp'
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -14,11 +15,13 @@ const Signup = () => {
         confirmPassword: '',
         phone: ''
     });
+    const [otp, setOtp] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
+    const [otpSuccess, setOtpSuccess] = useState('');
 
     const validate = () => {
         const newErrors = {};
@@ -28,12 +31,8 @@ const Signup = () => {
         const password = formData.password.trim();
         const confirmPassword = formData.confirmPassword.trim();
 
-        if (!firstName) {
-            newErrors.firstName = 'First name is required';
-        }
-        if (!lastName) {
-            newErrors.lastName = 'Last name is required';
-        }
+        if (!firstName) newErrors.firstName = 'First name is required';
+        if (!lastName) newErrors.lastName = 'Last name is required';
         if (!email) {
             newErrors.email = 'Please enter your email address';
         } else if (!/\S+@\S+\.\S+/.test(email)) {
@@ -44,9 +43,7 @@ const Signup = () => {
         } else if (password.length < 6) {
             newErrors.password = 'Password must be at least 6 characters long';
         }
-        if (password !== confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
-        }
+        if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
         if (!formData.phone) newErrors.phone = 'Phone number is required';
 
         return newErrors;
@@ -54,20 +51,10 @@ const Signup = () => {
 
     const handleChange = (e) => {
         const { id, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [id]: value,
-        }));
-        // Clear error
-        if (errors[id]) {
-            setErrors((prev) => ({
-                ...prev,
-                [id]: '',
-            }));
-        }
+        setFormData(prev => ({ ...prev, [id]: value }));
+        if (errors[id]) setErrors(prev => ({ ...prev, [id]: '' }));
         if (apiError) setApiError('');
     };
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -81,17 +68,14 @@ const Signup = () => {
         setApiError('');
         try {
             const registrationData = {
-                name: {
-                    first: formData.firstName,
-                    last: formData.lastName
-                },
+                name: { first: formData.firstName, last: formData.lastName },
                 email: formData.email,
                 password: formData.password,
                 phone: formData.phone,
                 role: formData.role || 'patient'
             };
             await authService.register(registrationData);
-            navigate('/');
+            setStep('otp');
         } catch (err) {
             setApiError(err.message || 'Failed to create account. Please try again.');
         } finally {
@@ -99,20 +83,37 @@ const Signup = () => {
         }
     };
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        if (!otp || otp.length !== 6) {
+            setApiError('Please enter the 6-digit OTP sent to your email.');
+            return;
+        }
+        setIsLoading(true);
+        setApiError('');
+        try {
+            await authService.verifyOtp(otp);
+            navigate('/');
+        } catch (err) {
+            setApiError(err.message || 'Invalid or expired OTP. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(!showConfirmPassword);
+    const handleResendOtp = async () => {
+        setApiError('');
+        setOtpSuccess('');
+        try {
+            await authService.sendOtp();
+            setOtpSuccess('A new OTP has been sent to your email.');
+        } catch (err) {
+            setApiError(err.message || 'Failed to resend OTP.');
+        }
     };
 
     const EyeIcon = ({ visible, onClick }) => (
-        <button
-            type="button"
-            className="text-gray-400 hover:text-gray-500 focus:outline-none"
-            onClick={onClick}
-        >
+        <button type="button" className="text-gray-400 hover:text-gray-500 focus:outline-none" onClick={onClick}>
             {visible ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -127,6 +128,80 @@ const Signup = () => {
         </button>
     );
 
+    // ── OTP Step ──────────────────────────────────────────────────────────────
+    if (step === 'otp') {
+        return (
+            <div>
+                <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                    <div className="flex justify-center mb-4">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 className="text-center text-3xl font-bold text-gray-900">Verify your email</h2>
+                    <p className="mt-2 text-center text-sm text-gray-600">
+                        We've sent a 6-digit OTP to <span className="font-medium text-indigo-600">{formData.email}</span>
+                    </p>
+                </div>
+
+                <div className="mt-8">
+                    <form className="space-y-6" onSubmit={handleVerifyOtp}>
+                        {apiError && (
+                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+                                <span className="block sm:inline">{apiError}</span>
+                            </div>
+                        )}
+                        {otpSuccess && (
+                            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded relative">
+                                <span className="block sm:inline">{otpSuccess}</span>
+                            </div>
+                        )}
+
+                        <div>
+                            <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
+                                Enter OTP
+                            </label>
+                            <input
+                                id="otp"
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={6}
+                                value={otp}
+                                onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setApiError(''); }}
+                                placeholder="••••••"
+                                className="block w-full px-4 py-3 text-center text-2xl tracking-widest border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">OTP is valid for 10 minutes.</p>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full flex justify-center py-2 px-4 shadow-sm text-sm font-medium"
+                            isLoading={isLoading}
+                            disabled={isLoading}
+                        >
+                            Verify & Continue
+                        </Button>
+
+                        <p className="text-center text-sm text-gray-600">
+                            Didn't receive it?{' '}
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                                Resend OTP
+                            </button>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Registration Form ─────────────────────────────────────────────────────
     return (
         <div>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -150,36 +225,11 @@ const Signup = () => {
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                            id="firstName"
-                            label="First Name"
-                            type="text"
-                            placeholder="e.g., Rishi"
-                            value={formData.firstName}
-                            onChange={handleChange}
-                            error={errors.firstName}
-                        />
-
-                        <Input
-                            id="lastName"
-                            label="Last Name"
-                            type="text"
-                            placeholder="e.g., Tiwari"
-                            value={formData.lastName}
-                            onChange={handleChange}
-                            error={errors.lastName}
-                        />
+                        <Input id="firstName" label="First Name" type="text" placeholder="e.g., Rishi" value={formData.firstName} onChange={handleChange} error={errors.firstName} />
+                        <Input id="lastName" label="Last Name" type="text" placeholder="e.g., Tiwari" value={formData.lastName} onChange={handleChange} error={errors.lastName} />
                     </div>
 
-                    <Input
-                        id="email"
-                        label="Email address"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        error={errors.email}
-                    />
+                    <Input id="email" label="Email address" type="email" placeholder="name@example.com" value={formData.email} onChange={handleChange} error={errors.email} />
 
                     <Input
                         id="password"
@@ -190,7 +240,7 @@ const Signup = () => {
                         onChange={handleChange}
                         error={errors.password}
                         helperText="Must be at least 6 characters"
-                        rightElement={<EyeIcon visible={showPassword} onClick={togglePasswordVisibility} />}
+                        rightElement={<EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />}
                     />
 
                     <Input
@@ -206,23 +256,13 @@ const Signup = () => {
                                 ? <span className="text-green-600 font-medium text-xs">Matched</span>
                                 : ""
                         }
-                        rightElement={<EyeIcon visible={showConfirmPassword} onClick={toggleConfirmPasswordVisibility} />}
+                        rightElement={<EyeIcon visible={showConfirmPassword} onClick={() => setShowConfirmPassword(!showConfirmPassword)} />}
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Input
-                            id="phone"
-                            label="Phone Number (+91)"
-                            type="tel"
-                            placeholder="98765 43210"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            error={errors.phone}
-                        />
+                        <Input id="phone" label="Phone Number (+91)" type="tel" placeholder="98765 43210" value={formData.phone} onChange={handleChange} error={errors.phone} />
                         <div className="flex flex-col">
-                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                                Role
-                            </label>
+                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                             <select
                                 id="role"
                                 value={formData.role || 'patient'}
