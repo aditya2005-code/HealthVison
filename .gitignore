@@ -4,6 +4,7 @@ env/
 .venv/
 venv311/
 venv2/
+venv3/
 
 # Python cache
 __pycache__/
