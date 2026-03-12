@@ -21,12 +21,12 @@ const sendConfirmationEmail = async (appointmentId) => {
 
         const emailHtml = `
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                <div style="background-color: #007bff; padding: 25px; text-align: center;">
+                <div style="background-color: #10b981; padding: 25px; text-align: center;">
                     <h1 style="color: #ffffff; margin: 0; font-size: 24px;">HealthVision</h1>
                 </div>
                 <div style="padding: 30px; background-color: #ffffff;">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <span style="background-color: #e7f3ff; color: #007bff; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Confirmed</span>
+                        <span style="background-color: #d1fae5; color: #059669; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Confirmed</span>
                     </div>
                     <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear <strong>${user.name.first || user.name}</strong>,</p>
                     <p style="font-size: 16px; color: #555555; line-height: 1.6; margin-bottom: 20px;">Great news! Your appointment has been successfully scheduled and paid.</p>

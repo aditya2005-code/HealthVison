@@ -442,12 +442,12 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
 
             const emailHtml = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                    <div style="background-color: #2563eb; padding: 25px; text-align: center;">
+                    <div style="background-color: #f97316; padding: 25px; text-align: center;">
                         <h1 style="color: #ffffff; margin: 0; font-size: 24px;">HealthVision</h1>
                     </div>
                     <div style="padding: 30px; background-color: #ffffff;">
                         <div style="text-align: center; margin-bottom: 25px;">
-                            <span style="background-color: #e0e7ff; color: #2563eb; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Rescheduled</span>
+                            <span style="background-color: #ffedd5; color: #ea580c; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Appointment Rescheduled</span>
                         </div>
                         <p style="font-size: 16px; color: #333333; line-height: 1.6;">Dear <strong>${user.name.first || user.name}</strong>,</p>
                         <p style="font-size: 16px; color: #555555; line-height: 1.6; margin-bottom: 20px;">Your appointment has been successfully rescheduled.</p>
