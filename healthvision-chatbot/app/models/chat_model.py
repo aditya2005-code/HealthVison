@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from typing import Dict , Optional , List
 
+class GeneralChatRequest(BaseModel):
+    question:str
+
+
 class Features(BaseModel):
     raw_output:str
 
