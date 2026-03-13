@@ -14,7 +14,7 @@
 | **Phase 1: Foundation & Setup** | Days 1-7 | Project setup, authentication, database design |
 | **Phase 2: Core Features I** | Days 8-14 | Public pages, dashboard, report analysis foundation |
 | **Phase 3: Core Features II** | Days 15-17 | Appointments, symptom chatbot (Paused at Day 17) |
-| **Phase 4: Project Wrap-Up**| Days 18-25 | Payments, WebRTC, final testing, deployment |
+| **Phase 4: Project Wrap-Up**| Days 18-23 | Payments, WebRTC, final testing, deployment |
 
 ---
 
@@ -345,9 +345,7 @@
 
 ---
 
-## 🏁 Phase 4: Project Wrap-Up (Days 18-25)
-
-### Day 18: Payments Integration & ML Verification
+## 🏁 Phase 4: Project Wrap-Up### Day 18: Payments Integration & ML Verification
 **Frontend:**
 - Complete Day 17 backlog: Design payment integration UI
 - Add payment form component (Razorpay SDK)
@@ -443,21 +441,6 @@
 - Benchmark ML model performance and API response times under load
 - Thoroughly test chatbot edge cases with varied symptom inputs
 
-### Day 24: End-to-End Integration Testing
-**All Roles:**
-- Unified integration testing across auth, payments, appointments, and ML
-- Fix critical bugs identified
-- Final security review on data handling
-- Database and API response time optimization (specifically for OCR and Model inference)
-
-### Day 25: Deployment & Handover
-**All Roles:**
-- Final code review & merge all feature branches to main
-- Deployment to production/staging environment (Render/AWS for Backend/ML, Vercel/Netlify for Frontend)
-- Ensure SSL, environment variables, and domains configured
-- Demo preparation for mentors/professors
-- Documentation finalization & Project handover
-
 ---
 
 ## 📋 Key Deliverables by Role
@@ -514,3 +497,17 @@
 - **Payment Gateway:** Test mode setup early to avoid delays
 - **WebRTC Complexity:** Start with basic implementation, enhance later
 
+---
+
+## 🚀 Deployment History
+
+- **First Node.js Backend Deployment:** March 9, 2026 at 10:0:21 PM (Followed by various environment updates and redeployments)
+- **First Vite Frontend Deployment:** March 11, 2026 at 05:41:43 PM
+- **First ML-Service Deployment:** March 11, 2026 at 9:00 PM
+- **First Chatbot Deployment:** March 12, 2026 at 5:30 PM
+
+*Between initial deployments and March 15th, 2026, continuous redeployments were triggered to push the following critical environment fixes to production:*
+- CORS configuration fixes
+- Switching email service from Gmail SMTP to Resend
+- Migrating file uploads from Multer to Cloudinary
+- Switching Razorpay integration from Test mode to Live mode
