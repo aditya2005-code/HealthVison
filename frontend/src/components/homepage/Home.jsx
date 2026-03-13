@@ -856,7 +856,6 @@ const CTASection = () => (
 const Footer = () => {
   const cols = {
     Company: ["About Us"],
-    Support: ["Help Centre", "Contact"],
   };
 
   return (
