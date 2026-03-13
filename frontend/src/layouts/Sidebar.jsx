@@ -6,7 +6,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     const userRole = authService.getCurrentUser()?.role;
 
     const navItems = [
-        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         ...(userRole !== 'doctor' ? [
             { path: '/doctors', label: 'Find Doctors', icon: Users },
             { path: '/reports', label: 'Reports', icon: FileText },

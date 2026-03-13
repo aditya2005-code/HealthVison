@@ -25,6 +25,7 @@ import PaymentFailure from './pages/PaymentFailure';
 import PaymentHistory from './pages/PaymentHistory';
 import VideoConsultation from './pages/VideoConsultation';
 import authService from './services/auth.service';
+import Home from './components/homepage/Home.jsx';
 
 const DashboardWrapper = () => {
   const user = authService.getCurrentUser();
@@ -48,9 +49,10 @@ function App() {
           <Route path="/doctors/:id" element={<DoctorDetail />} />
         </Route>
 
+        <Route path="/" element={<Home />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<DashboardWrapper />} />
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<DashboardWrapper />} />
             <Route path="reports/upload" element={<ReportUpload />} />
             <Route path="reports" element={<Reports />} />
             <Route path="reports/:id" element={<ReportAnalysis />} />
