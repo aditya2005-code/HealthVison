@@ -176,49 +176,68 @@ const Badge = ({ children, dark = false }) => (
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const { scrollY } = useScroll();
-  const bg = useTransform(scrollY, [0, 80], ["rgba(11,29,58,0)", "rgba(11,29,58,0.95)"]);
+  const bg = useTransform(scrollY, [0, 80], ["rgba(255,255,255,0)", "rgba(255,255,255,1)"]);
   const blur = useTransform(scrollY, [0, 80], ["blur(0px)", "blur(16px)"]);
+  const shadow = useTransform(scrollY, [0, 80], ["0 0 0 rgba(0,0,0,0)", "0 2px 16px rgba(11,29,58,0.08)"]);
 
-  const links = ["Features", "How It Works", "Doctors",];
+  const links = [
+    { label: "Features", anchor: "#features" },
+    { label: "How It Works", anchor: "#how-it-works" },
+    { label: "Doctors", to: "/doctors" },
+  ];
 
   return (
     <motion.header
-      style={{ backgroundColor: bg, backdropFilter: blur }}
-      className="fixed top-0 left-0 right-0 z-50 border-b border-white/5"
+      style={{ backgroundColor: bg, backdropFilter: blur, boxShadow: shadow }}
+      className="fixed top-0 left-0 right-0 z-50 border-b border-black/5"
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <motion.div
-            whileHover={{ rotate: 15 }}
+          <motion.img
+            src="/logo.png"
+            alt="HealthVision Logo"
+            whileHover={{ scale: 1.08 }}
             transition={{ type: "spring", stiffness: 300 }}
-            className="w-8 h-8 rounded-lg bg-cyan-400 flex items-center justify-center"
-          >
-            <HeartPulse size={18} className="text-[#0B1D3A]" strokeWidth={2.5} />
-          </motion.div>
-          <span className="font-display text-white text-lg tracking-tight">
-            Health<span className="text-cyan-400">Vision</span>
-          </span>
+            className="h-8 w-auto object-contain"
+          />
+          <motion.img
+            src="/logo-text.png"
+            alt="HealthVision"
+            whileHover={{ scale: 1.04 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="h-6 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {links.map((l) => (
-            <a
-              key={l}
-              href={`#${l.toLowerCase().replace(/ /g, "-")}`}
-              className="text-sm text-white/60 hover:text-white transition-colors duration-200"
-            >
-              {l}
-            </a>
-          ))}
+          {links.map((l) =>
+            l.to ? (
+              <Link
+                key={l.label}
+                to={l.to}
+                className="text-sm text-[#556A8B] hover:text-[#0B1D3A] font-medium transition-colors duration-200"
+              >
+                {l.label}
+              </Link>
+            ) : (
+              <a
+                key={l.label}
+                href={l.anchor}
+                className="text-sm text-[#556A8B] hover:text-[#0B1D3A] font-medium transition-colors duration-200"
+              >
+                {l.label}
+              </a>
+            )
+          )}
         </nav>
 
         {/* CTA */}
         <div className="hidden md:flex items-center gap-3">
           <Link
             to="/login"
-            className="text-sm text-white/70 hover:text-white transition-colors px-4 py-2"
+            className="text-sm text-[#556A8B] hover:text-[#0B1D3A] font-medium transition-colors px-4 py-2"
           >
             Sign in
           </Link>
@@ -226,7 +245,7 @@ const Navbar = () => {
             <motion.button
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
-              className="text-sm font-medium bg-cyan-400 text-[#0B1D3A] px-5 py-2.5 rounded-full hover:bg-cyan-300 transition-colors"
+              className="text-sm font-medium bg-[#0B1D3A] text-white px-5 py-2.5 rounded-full hover:bg-[#112347] transition-colors"
             >
               Get Started
             </motion.button>
@@ -235,7 +254,7 @@ const Navbar = () => {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden text-white/80 hover:text-white"
+          className="md:hidden text-[#0B1D3A]/70 hover:text-[#0B1D3A]"
           onClick={() => setOpen(!open)}
         >
           {open ? <X size={22} /> : <Menu size={22} />}
@@ -250,19 +269,30 @@ const Navbar = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden overflow-hidden bg-[#0B1D3A] border-t border-white/10"
+            className="md:hidden overflow-hidden bg-white border-t border-black/5"
           >
             <div className="px-6 py-4 flex flex-col gap-4">
-              {links.map((l) => (
-                <a
-                  key={l}
-                  href={`#${l.toLowerCase().replace(/ /g, "-")}`}
-                  onClick={() => setOpen(false)}
-                  className="text-white/70 hover:text-white text-sm py-1"
-                >
-                  {l}
-                </a>
-              ))}
+              {links.map((l) =>
+                l.to ? (
+                  <Link
+                    key={l.label}
+                    to={l.to}
+                    onClick={() => setOpen(false)}
+                    className="text-[#556A8B] hover:text-[#0B1D3A] font-medium text-sm py-1"
+                  >
+                    {l.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={l.label}
+                    href={l.anchor}
+                    onClick={() => setOpen(false)}
+                    className="text-[#556A8B] hover:text-[#0B1D3A] font-medium text-sm py-1"
+                  >
+                    {l.label}
+                  </a>
+                )
+              )}
               <Link to="/signup" onClick={() => setOpen(false)}>
                 <button className="w-full mt-2 bg-cyan-400 text-[#0B1D3A] text-sm font-medium py-3 rounded-full">
                   Get Started Free
@@ -281,8 +311,8 @@ const Hero = () => {
   const navigate = useNavigate();
   const handleAuthNavigation = (e, path, message) => {
     e.preventDefault();
-    if (message) toast(message, { icon: '👋' });
-    navigate(path);
+    if (message) toast(message, { icon: '👋', duration: 2000 });
+    setTimeout(() => navigate(path), 800);
   };
 
   // Floating orb animation
@@ -372,7 +402,7 @@ const Hero = () => {
             </motion.button>
           </Link>
           <motion.button
-            onClick={(e) => handleAuthNavigation(e, '/login', 'Please login to find and book doctors')}
+            onClick={(e) => handleAuthNavigation(e, '/login', 'Please login to find and book appointments with octors')}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
             className="glass-card flex items-center gap-2 text-white/80 hover:text-white font-medium px-8 py-4 rounded-full text-base transition-colors cursor-pointer"
@@ -383,7 +413,7 @@ const Hero = () => {
         </motion.div>
 
         {/* Trust badges row */}
-        
+
       </div>
 
       {/* Floating stat cards */}
@@ -434,7 +464,7 @@ const features = [
     title: "AI Medical Report Analysis",
     desc: "Upload any lab report, MRI, or prescription. Our AI delivers instant plain-English insights and flags critical values in seconds.",
     wide: true,
-    href:"/login"
+    href: "/login"
   },
   {
     icon: MessageCircle,
@@ -443,7 +473,7 @@ const features = [
     title: "24/7 AI Health Chatbot",
     desc: "Ask any symptom, medication, or wellness question anytime. Intelligent triage that knows when to escalate to a real doctor.",
     wide: false,
-    href:"/login"
+    href: "/login"
   },
   {
     icon: Video,
@@ -452,7 +482,7 @@ const features = [
     title: "Secure Video Consultations",
     desc: "Crystal-clear, end-to-end encrypted telehealth calls with specialists from the comfort of your home.",
     wide: false,
-    href:"/login"
+    href: "/login"
   },
   {
     icon: CalendarCheck,
@@ -461,7 +491,7 @@ const features = [
     title: "Smart Appointment Booking",
     desc: "Real-time availability, specialty filtering, and intelligent scheduling that respects your time zone and preferences.",
     wide: false,
-    href:"/login"
+    href: "/login"
   },
   {
     icon: LayoutDashboard,
@@ -470,7 +500,7 @@ const features = [
     title: "Patient & Doctor Dashboards",
     desc: "Tailored command centres — patients track history & prescriptions, doctors manage queues & patient records.",
     wide: false,
-    href:"/login"
+    href: "/login"
   },
   {
     icon: CreditCard,
@@ -480,7 +510,7 @@ const features = [
     desc: "Consultation fees handled with bank-grade security. Automatic receipts and insurance-ready invoices.",
     wide: true,
     tag: "PCI-DSS Level 1",
-    href:"/login"
+    href: "/login"
   },
 ];
 
@@ -489,7 +519,7 @@ const FeatureCard = ({ feat, i }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    toast('Please login to enjoy our services', { icon: '👋', duration: 3000 });
+    toast('Please login to enjoy our services', { icon: '👋', duration: 2000 });
     navigate(feat.href);
   };
 
@@ -611,82 +641,82 @@ const steps = [
 const HowItWorksSection = () => {
   const navigate = useNavigate();
   return (
-  <Section className="py-28 px-6 bg-white">
-    <div className="max-w-5xl mx-auto">
-      {/* Heading */}
-      <div className="text-center mb-20">
-        <motion.div variants={fadeUp} custom={0}>
-          <Badge>
-            <CheckCircle2 size={11} />
-            Simple by Design
-          </Badge>
-        </motion.div>
-        <motion.h2
-          variants={fadeUp}
-          custom={1}
-          className="font-display text-[#0B1D3A] mt-4 leading-tight"
-          style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
-        >
-          Your journey to better health<br />
-          <span className="italic text-[#0B1D3A]">in three steps.</span>
-        </motion.h2>
-      </div>
-
-      {/* Steps */}
-      <div id="how-it-works" className="relative scroll-mt-24">
-        {/* Connector line (desktop) */}
-        <div className="hidden md:block absolute top-10 left-[calc(16.67%+2rem)] right-[calc(16.67%+2rem)] h-px bg-gradient-to-r from-cyan-200 via-indigo-200 to-emerald-200" />
-
-        <div className="grid md:grid-cols-3 gap-10">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.num}
-              variants={fadeUp}
-              custom={i}
-              className="flex flex-col items-center text-center"
-            >
-              {/* Step icon */}
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 8 }}
-                transition={{ type: "spring", stiffness: 280 }}
-                className="relative w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-lg"
-                style={{ background: `${step.color}18`, border: `1.5px solid ${step.color}30` }}
-              >
-                <step.icon size={30} style={{ color: step.color }} strokeWidth={1.6} />
-                <span
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                  style={{ background: step.color }}
-                >
-                  {i + 1}
-                </span>
-              </motion.div>
-              <h3 className="font-semibold text-[#0B1D3A] text-lg mb-2">{step.title}</h3>
-              <p className="text-[#556A8B] text-sm leading-relaxed">{step.desc}</p>
-            </motion.div>
-          ))}
+    <Section className="py-28 px-6 bg-white">
+      <div className="max-w-5xl mx-auto">
+        {/* Heading */}
+        <div className="text-center mb-20">
+          <motion.div variants={fadeUp} custom={0}>
+            <Badge>
+              <CheckCircle2 size={11} />
+              Simple by Design
+            </Badge>
+          </motion.div>
+          <motion.h2
+            variants={fadeUp}
+            custom={1}
+            className="font-display text-[#0B1D3A] mt-4 leading-tight"
+            style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
+          >
+            Your journey to better health<br />
+            <span className="italic text-[#0B1D3A]">in three steps.</span>
+          </motion.h2>
         </div>
-      </div>
 
-      {/* Demo CTA */}
-      <motion.div variants={fadeUp} custom={4} className="mt-16 text-center">
-        <motion.button
-          onClick={() => {
-            toast('Please login to access the demo', { icon: '👋' });
-            navigate('/login');
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.97 }}
-          className="inline-flex items-center gap-3 bg-[#0B1D3A] text-white font-medium px-8 py-4 rounded-full text-sm hover:bg-[#112347] transition-colors"
-        >
-          <div className="w-7 h-7 rounded-full bg-cyan-400 flex items-center justify-center">
-            <Play size={12} fill="currentColor" className="text-[#0B1D3A] ml-0.5" />
+        {/* Steps */}
+        <div id="how-it-works" className="relative scroll-mt-24">
+          {/* Connector line (desktop) */}
+          <div className="hidden md:block absolute top-10 left-[calc(16.67%+2rem)] right-[calc(16.67%+2rem)] h-px bg-gradient-to-r from-cyan-200 via-indigo-200 to-emerald-200" />
+
+          <div className="grid md:grid-cols-3 gap-10">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.num}
+                variants={fadeUp}
+                custom={i}
+                className="flex flex-col items-center text-center"
+              >
+                {/* Step icon */}
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 8 }}
+                  transition={{ type: "spring", stiffness: 280 }}
+                  className="relative w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-lg"
+                  style={{ background: `${step.color}18`, border: `1.5px solid ${step.color}30` }}
+                >
+                  <step.icon size={30} style={{ color: step.color }} strokeWidth={1.6} />
+                  <span
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                    style={{ background: step.color }}
+                  >
+                    {i + 1}
+                  </span>
+                </motion.div>
+                <h3 className="font-semibold text-[#0B1D3A] text-lg mb-2">{step.title}</h3>
+                <p className="text-[#556A8B] text-sm leading-relaxed">{step.desc}</p>
+              </motion.div>
+            ))}
           </div>
-          Watch 2-min Demo
-        </motion.button>
-      </motion.div>
-    </div>
-  </Section>
-);
+        </div>
+
+        {/* Demo CTA */}
+        <motion.div variants={fadeUp} custom={4} className="mt-16 text-center">
+          <motion.button
+            onClick={() => {
+              toast('Please login to access the demo', { icon: '👋' });
+              navigate('/login');
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            className="inline-flex items-center gap-3 bg-[#0B1D3A] text-white font-medium px-8 py-4 rounded-full text-sm hover:bg-[#112347] transition-colors"
+          >
+            <div className="w-7 h-7 rounded-full bg-cyan-400 flex items-center justify-center">
+              <Play size={12} fill="currentColor" className="text-[#0B1D3A] ml-0.5" />
+            </div>
+            Watch 2-min Demo
+          </motion.button>
+        </motion.div>
+      </div>
+    </Section>
+  );
 };
 
 // ─── Social Proof / Stats ─────────────────────────────────────────────────────
@@ -701,20 +731,20 @@ const testimonials = [
   {
     name: "Aditya Pratap Singh",
     role: "Patient",
-    text: "The AI report analysis flagged an anomaly my GP had missed. It potentially saved my life. Incredible platform.",
+    text: "Uploaded my blood work and got a clear breakdown in minutes. It actually explained what each value meant instead of just listing numbers. Really helpful before my doctor visit.",
     stars: 5,
   },
   {
-    name: "Dr. Arjun Mehta",
-    role: "Cardiologist",
-    text: "HealthVision streamlined my entire consultation workflow. Video calls are butter-smooth and the dashboard is intuitive.",
+    name: "Dr. Udit Maheswari",
+    role: "Dentist",
+    text: "The appointment and video call flow is clean and reliable. Patients show up prepared, which makes consultations more productive. A solid tool for remote follow-ups.",
     stars: 5,
   },
   {
     name: "Akhil Pandey",
     role: "Patient",
-    text: "Booked a specialist appointment at midnight and had a video consultation by 9am. Genuinely remarkable.",
-    stars: 5,
+    text: "Finding a specialist and booking a slot was way easier than I expected. Got everything confirmed the same evening. The video call quality was good too.",
+    stars: 4,
   },
 ];
 
@@ -761,8 +791,8 @@ const SocialProofSection = () => (
           className="font-display text-white"
           style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)" }}
         >
-          Trusted by thousands of{" "}
-          <span className="text-cyan-400 italic">real patients & doctors.</span>
+          Trusted by a lot of{" "}
+          <span className="text-cyan-400 italic"> patients & doctors.</span>
         </motion.h2>
       </div>
 
@@ -799,58 +829,62 @@ const SocialProofSection = () => (
 );
 
 // ─── Final CTA Banner ─────────────────────────────────────────────────────────
-const CTASection = () => (
-  <Section className="py-24 px-6 bg-[#F7FAFF]">
-    <div className="max-w-3xl mx-auto text-center">
-      <motion.div variants={fadeUp} custom={0}>
-        <Badge>
-          <HeartPulse size={11} />
-          Start Today — It's Free
-        </Badge>
-      </motion.div>
-      <motion.h2
-        variants={fadeUp}
-        custom={1}
-        className="font-display text-[#0B1D3A] mt-5 leading-tight"
-        style={{ fontSize: "clamp(2rem, 4.5vw, 3.2rem)" }}
-      >
-        Take control of your health<br />
-        <span className="italic text-cyan-500">before it takes control of you.</span>
-      </motion.h2>
-      <motion.p
-        variants={fadeUp}
-        custom={2}
-        className="mt-5 text-[#556A8B] text-base leading-relaxed max-w-xl mx-auto"
-      >
-        Join over 10,000 patients who've already discovered smarter, faster, and more
-        confident healthcare decisions with HealthVision.
-      </motion.p>
-      <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <Link to="/signup">
-          <motion.button
-            whileHover={{ scale: 1.06, boxShadow: "0 0 40px rgba(0,200,255,0.35)" }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-2 bg-[#0B1D3A] text-white font-semibold px-9 py-4 rounded-full text-base"
-          >
-            Create Free Account
-            <ArrowRight size={18} strokeWidth={2.5} />
-          </motion.button>
-        </Link>
-        <motion.button
-          onClick={() => {
-            toast('Please login to browse our doctors', { icon: '👋', duration: 3000 });
-            navigate('/login');
-          }}
-          whileHover={{ scale: 1.04 }}
-          className="flex items-center gap-2 text-[#0B1D3A] border-2 border-[#0B1D3A]/15 hover:border-cyan-400/50 font-medium px-9 py-4 rounded-full text-base transition-colors"
+const CTASection = () => {
+  const navigate = useNavigate();
+  return (
+    <Section className="py-24 px-6 bg-[#F7FAFF]">
+      <div className="max-w-3xl mx-auto text-center">
+        <motion.div variants={fadeUp} custom={0}>
+          <Badge>
+            <HeartPulse size={11} />
+            Start Today — It's Free
+          </Badge>
+        </motion.div>
+        <motion.h2
+          variants={fadeUp}
+          custom={1}
+          className="font-display text-[#0B1D3A] mt-5 leading-tight"
+          style={{ fontSize: "clamp(2rem, 4.5vw, 3.2rem)" }}
         >
-          <UserSearch size={18} />
-          Browse Doctors
-        </motion.button>
-      </motion.div>
-    </div>
-  </Section>
-);
+          Take control of your health<br />
+          <span className="italic text-cyan-500">before it takes control of you.</span>
+        </motion.h2>
+        <motion.p
+          variants={fadeUp}
+          custom={2}
+          className="mt-5 text-[#556A8B] text-base leading-relaxed max-w-xl mx-auto"
+        >
+          Join over 10,000 patients who've already discovered smarter, faster, and more
+          confident healthcare decisions with HealthVision.
+        </motion.p>
+        <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link to="/signup">
+            <motion.button
+              whileHover={{ scale: 1.06, boxShadow: "0 0 40px rgba(0,200,255,0.35)" }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-2 bg-[#0B1D3A] text-white font-semibold px-9 py-4 rounded-full text-base"
+            >
+              Create Free Account
+              <ArrowRight size={18} strokeWidth={2.5} />
+            </motion.button>
+          </Link>
+          <motion.button
+            onClick={() => {
+              toast('Browse our verified specialists and book an appointment!', { icon: '🩺', duration: 2000 });
+              setTimeout(() => navigate('/doctors'), 800);
+            }}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-2 text-[#0B1D3A] border-2 border-[#0B1D3A]/15 hover:border-cyan-400/50 font-medium px-9 py-4 rounded-full text-base transition-colors"
+          >
+            <UserSearch size={18} />
+            Browse Doctors
+          </motion.button>
+        </motion.div>
+      </div>
+    </Section>
+  );
+};
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 const Footer = () => {
@@ -865,12 +899,16 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-cyan-400 flex items-center justify-center">
-                <HeartPulse size={16} className="text-[#0B1D3A]" strokeWidth={2.5} />
-              </div>
-              <span className="font-display text-white text-lg">
-                Health<span className="text-cyan-400">Vision</span>
-              </span>
+              <img
+                src="/logo.png"
+                alt="HealthVision Logo"
+                className="h-8 w-auto object-contain"
+              />
+              <img
+                src="/logo-text.png"
+                alt="HealthVision"
+                className="h-6 w-auto object-contain brightness-0 invert"
+              />
             </div>
             <p className="text-xs leading-relaxed text-white/30 mb-4">
               Intelligent healthcare for everyone. Powered by AI, trusted by thousands.
@@ -927,11 +965,10 @@ const Footer = () => {
 };
 
 // ─── Root Component ───────────────────────────────────────────────────────────
-  export default function Home() {
+export default function Home() {
   return (
     <>
       <GlobalStyles />
-      <Toaster position="top-center" reverseOrder={false} />
       <Navbar />
       <main>
         <Hero />

@@ -9,4 +9,10 @@ export default defineConfig({
   define: {
     global: 'window',
   },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react/jsx-runtime'],
+  },
 })
