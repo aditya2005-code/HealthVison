@@ -59,7 +59,7 @@ const Login = () => {
         setApiError('');
         try {
             await authService.login(formData.email, formData.password);
-            navigate('/');
+            navigate('/dashboard');
         } catch (err) {
             setApiError(err.message || 'Failed to login. Please try again.');
         } finally {

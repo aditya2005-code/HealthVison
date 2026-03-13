@@ -1,8 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Star, MapPin, Clock } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import authService from '../services/auth.service';
 
 export default function DoctorCard({ doctor }) {
+    const navigate = useNavigate();
+    
+    const handleViewProfile = () => {
+        const user = authService.getCurrentUser();
+        if (!user) {
+            toast('Please login to view doctor profiles and book appointments!', { icon: '👋', duration: 3000 });
+            setTimeout(() => navigate('/login'), 800);
+        } else {
+            navigate(`/doctors/${doctor._id}`);
+        }
+    };
+
     return (
         <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
             <div className="p-6 flex flex-col flex-grow">
@@ -48,12 +62,12 @@ export default function DoctorCard({ doctor }) {
                     </div>
                 </div>
 
-                <Link
-                    to={`/doctors/${doctor._id}`}
+                <button
+                    onClick={handleViewProfile}
                     className="block w-full text-center py-2.5 px-4 bg-gray-50 hover:bg-blue-600 text-blue-600 hover:text-white font-medium rounded-lg transition-colors duration-300 border border-blue-200 hover:border-blue-600"
                 >
                     View Profile
-                </Link>
+                </button>
             </div>
         </div>
     );

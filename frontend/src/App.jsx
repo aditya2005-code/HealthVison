@@ -25,6 +25,7 @@ import PaymentFailure from './pages/PaymentFailure';
 import PaymentHistory from './pages/PaymentHistory';
 import VideoConsultation from './pages/VideoConsultation';
 import authService from './services/auth.service';
+import PublicRoute from './components/PublicRoute';
 import Home from './components/homepage/Home.jsx';
 
 const DashboardWrapper = () => {
@@ -35,21 +36,23 @@ const DashboardWrapper = () => {
 function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-right" />
+      <Toaster position="top-right" containerStyle={{ zIndex: 999999 }} />
       <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+        {/* Public Routes (Redirect to Dashboard if logged in) */}
+        <Route element={<PublicRoute />}>
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+            </Route>
+            <Route path="/" element={<Home />} />
         </Route>
 
         <Route element={<PublicLayout />}>
           <Route path="/doctors" element={<DoctorsList />} />
           <Route path="/doctors/:id" element={<DoctorDetail />} />
         </Route>
-
-        <Route path="/" element={<Home />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<DashboardWrapper />} />
