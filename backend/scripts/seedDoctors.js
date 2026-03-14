@@ -34,7 +34,8 @@ const doctors = [
         location: hospitals[1], // Regency
         languages: ["English", "Hindi"],
         registration: "Reg. No. UP-12345 (UPMC)",
-        contact: "+91 98765 43210"
+        contact: "+91 98765 43210",
+        isApproved: true
     },
     {
         name: "Dr. Gaurav Gupta",
@@ -118,7 +119,8 @@ const doctors = [
         location: hospitals[2], // Fortune Hospital
         languages: ["English", "Hindi"],
         registration: "Reg. No. UP-99887 (UPMC)",
-        contact: "+91 98765 67890"
+        contact: "+91 98765 67890",
+        isApproved: false // One pending doctor for demo
     },
     {
         name: "Dr. Satyasundara Mahapatra",
@@ -132,7 +134,8 @@ const doctors = [
         location: hospitals[8], // Madhuraj Hospital
         languages: ["English", "Hindi", "Odia"],
         registration: "Reg. No. UP-77665 (UPMC)",
-        contact: "+91 98765 13579"
+        contact: "+91 98765 13579",
+        isApproved: true
     }
 ];
 
@@ -180,7 +183,8 @@ const seedDoctors = async () => {
             // Create the Doctor profile linked to the User
             await Doctor.create({
                 ...doc,
-                userId: user._id
+                userId: user._id,
+                isApproved: doc.isApproved !== undefined ? doc.isApproved : true
             });
 
             console.log(`Seeded: ${doc.name} (Email: ${email})`);

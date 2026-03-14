@@ -16,7 +16,8 @@ export default function DoctorDashboard() {
     const [stats, setStats] = useState({
         appointments: { total: 0, pending: 0 },
         consultations: 0,
-        reports: 0 // We'll repurpose reports or hide it
+        reports: 0,
+        isApproved: user?.isApproved
     });
     const [appointments, setAppointments] = useState([]);
     const [appointmentData, setAppointmentData] = useState([]);
@@ -32,6 +33,12 @@ export default function DoctorDashboard() {
 
             if (statsRes.success) {
                 setStats(statsRes.data);
+                
+                // Update local storage if approval status changed on the server
+                if (statsRes.data.isApproved !== user?.isApproved) {
+                    const updatedUser = { ...user, isApproved: statsRes.data.isApproved };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                }
             }
 
             if (appointmentsRes.success) {
@@ -138,6 +145,22 @@ export default function DoctorDashboard() {
                                 <StatCard key={index} {...stat} />
                             ))}
                         </div>
+
+                        {!stats.isApproved && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-4">
+                                <div className="bg-amber-100 p-2 rounded-lg">
+                                    <AlertCircle className="w-6 h-6 text-amber-600" />
+                                </div>
+                                <div>
+                                    <h4 className="text-amber-900 font-bold">Profile Pending Approval</h4>
+                                    <p className="text-amber-700 text-sm mt-1">
+                                        Your profile is currently under review by our administrative team. 
+                                        You can still set up your profile and explore the dashboard, 
+                                        but patients will not be able to find you or book appointments until you are approved.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <h3 className="font-bold text-gray-800 mb-6 flex items-center">

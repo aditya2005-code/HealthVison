@@ -6,13 +6,13 @@ export const getStats = async (req, res) => {
         const user = req.user;
         const role = user.role;
 
-        let matchQuery = { userId: user._id };
-
+        let isApproved = true;
         if (role === 'doctor') {
             const { Doctor } = await import("../models/doctor.model.js");
             const doctor = await Doctor.findOne({ userId: user._id });
             if (doctor) {
                 matchQuery = { doctorId: doctor._id };
+                isApproved = doctor.isApproved;
             }
         }
 
@@ -39,7 +39,8 @@ export const getStats = async (req, res) => {
             data: {
                 appointments: appointmentStats[0] || { total: 0, pending: 0 },
                 reports: reportCount,
-                consultations: consultationCount
+                consultations: consultationCount,
+                isApproved
             }
         });
     } catch (error) {
