@@ -1,5 +1,16 @@
 # 🏥 HealthVision
 
+**Live Project:** [Healthvision](https://healthviz.in)  
+**Status:** ✅ Completed (MVP)
+
+---
+
+### 📖 Project Documentation
+- **[Frontend Documentation](./frontend/README.md)**
+- **[Backend Documentation](./backend/README.md)**
+
+---
+
 A comprehensive MedTech web application built with the MERN stack and integrated AI/ML capabilities for medical report analysis, appointment booking, and telemedicine consultations.
 
 ## 📋 Project Overview
@@ -15,39 +26,11 @@ HealthVision provides users with a simple, accessible digital health platform wh
 
 ```
 HealthVision/
-├── frontend/              # React.js frontend application
-│   ├── public/           # Static assets
-│   └── src/
-│       ├── components/   # Reusable UI components
-│       ├── pages/        # Page components
-│       ├── services/     # API service layer
-│       ├── context/      # React context providers
-│       ├── utils/        # Utility functions
-│       └── assets/       # Images, fonts, etc.
-│
-├── backend/              # Node.js/Express backend API
-│   └── src/
-│       ├── controllers/  # Request handlers
-│       ├── models/       # MongoDB schemas
-│       ├── routes/       # API routes
-│       ├── middleware/   # Custom middleware
-│       ├── services/     # Business logic
-│       ├── utils/        # Helper functions
-│       └── config/       # Configuration files
-│
-├── ml-service/           # Python AI/ML service
-│   ├── models/          # Trained ML models
-│   ├── api/             # FastAPI/Flask endpoints
-│   ├── utils/           # ML utilities
-│   ├── data/            # Training/test data
-│   └── notebooks/       # Jupyter notebooks for experimentation
-│
-└── team-docs/           # Project documentation
-    ├── PROJECT_OVERVIEW.md
-    ├── TEAM_ROLES.md
-    ├── DEVELOPMENT_TIMELINE.md
-    ├── HealthVision-HLD.svg
-    └── HealthVision-LLD.svg
+├── frontend/              # React.js frontend application (Vite + Tailwind)
+├── backend/              # Node.js/Express backend API (MongoDB + Socket.io)
+├── healthvision-chatbot/  # Independent symptom chatbot service (Python)
+├── ml-service/           # Python AI/ML service for report analysis
+└── team-docs/           # Project documentation & design assets
 ```
 
 ## 🚀 Tech Stack
@@ -65,7 +48,7 @@ HealthVision/
 - **Database**: MongoDB with Mongoose
 - **Authentication**: JWT + bcrypt
 - **Real-time**: Socket.io (for WebRTC signaling)
-- **Payment**: Stripe
+- **Payment**: Razorpay (Live Mode)
 
 ### AI/ML Service
 - **Framework**: FastAPI/Flask
@@ -77,7 +60,7 @@ HealthVision/
 
 | Name | Role | GitHub |
 |------|------|--------|
-| **Akhil Pandey** | Backend + DB, AI/ML | [@Akhil9648](https://github.com/Akhil9648) |
+| **Akhil Pandey** | Backend + DB | [@Akhil9648](https://github.com/Akhil9648) |
 | **Aditya Pratap Singh** | AI/ML | [@aditya2005-code](https://github.com/aditya2005-code) |
 | **Rishi Tiwari** | Frontend, Backend + DB | [@rishi-tiwari023](https://github.com/rishi-tiwari023) |
 
@@ -153,26 +136,33 @@ python main.py
 - Voice and video calls
 - Basic call controls
 
-## � Network Testing (Mobile/Other Devices)
+## 🔑 Environment Configuration
 
-To test the application on other devices (like a smartphone) on the same Wi-Fi network:
+The project relies on environment variables for secure configuration. Both the frontend and backend require a `.env` file in their respective directories based on the provided templates.
 
-### 1. Find your Local IP Address
-- **Windows**: Open Command Prompt/PowerShell and type `ipconfig`. Look for `IPv4 Address` under your Wi-Fi adapter (e.g., `10.68.160.126`).
-- **Mac/Linux**: Open Terminal and type `ifconfig` or `ip addr`. Look for the `inet` address under `en0` or `wlan0`.
+### Frontend Environment (`frontend/.env.example`)
+- `VITE_API_URL`: Points to the Node.js API 
+- `VITE_RAZORPAY_KEY_ID`: Public key for the Razorpay Checkout integration.
 
-### 2. Update Environment Variables
-Update the IP address in your `.env` files:
-- **frontend/.env**: `VITE_API_URL=https://<your-ip>:3000/api`
-- **backend/.env**: Update `FRONTEND_URL`, `BACKEND_URL`, and `ML_API_URL` with your IP.
+### Backend Environment (`backend/.env.example`)
+- **Database**: `MONGODB_URI` for the MongoDB Atlas or local connection.
+- **Authentication**: `JWT_SECRET` for secure token signing and `JWT_EXPIRE`.
+- **Email (Resend)**: `RESEND_API_KEY` for transactional system emails.
+- **Cloud Storage**: `CLOUDINARY_URL` (or discrete name/key/secret) for report hosting.
+- **Payments**: `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` for server-side verification.
+- **Microservices**: `ML_API_URL` to connect with the FastAPI ML engine.
 
-### 3. Authorize SSL (CRITICAL)
-Because the project uses self-signed certificates for HTTPS (required for camera access):
-1. **On EACH device** (PC, Phone, Tablet): Open `https://<your-ip>:5173` and click "Advanced" -> "Proceed".
-2. **On EACH device**: Visit `https://<your-ip>:3000/api` and click "Advanced" -> "Proceed".
+## 🌐 Deployment
 
-> [!IMPORTANT]
-> If you don't visit the `:3000/api` link on every device, the frontend won't be able to communicate with the backend, and you'll see a "Network Error".
+HealthVision is architected as a distributed system with optimal hosting across different platforms:
+
+- **Frontend (Vite)**: Deployed on **Vercel** for ultra-fast edge delivery.
+- **Backend (Node.js)**: Hosted on **Render** (Web Service).
+- **ML Microservice (FastAPI)**: Hosted on **Render** (Independent Service).
+- **Symptom Chatbot**: Hosted on **Render** (Autonomous Service).
+- **Domain Management**: Custom domain `healthviz.in` configured via **GoDaddy**.
+
+## 🔄 Development Workflow
 
 ## �🔄 Development Workflow
 

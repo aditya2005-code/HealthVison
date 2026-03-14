@@ -16,7 +16,7 @@ This document outlines the distribution of tasks for the **HealthVision** projec
 | :--- | :--- |
 | **Frontend Developer** | [Rishi](https://github.com/rishi-tiwari023) |
 | **Backend + DB Developer** | [Rishi](https://github.com/rishi-tiwari023), [Akhil](https://github.com/Akhil9648) |
-| **AI/ML Developer** | [Akhil](https://github.com/Akhil9648), [Aditya](https://github.com/aditya2005-code) |
+| **ML-Service with Fast API** | [Aditya](https://github.com/aditya2005-code) |
 
 ---
 
@@ -66,7 +66,7 @@ This document outlines the distribution of tasks for the **HealthVision** projec
 
 ---
 
-## 🤖 AI/ML Developer (Akhil, Aditya)
+## 🤖 ML-Service with Fast API (Aditya)
 
 ### Responsibilities:
 - **Phase 1: Model Research & Setup**
