@@ -70,6 +70,11 @@ const doctorSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        isApproved: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
     },
     {
         timestamps: true,

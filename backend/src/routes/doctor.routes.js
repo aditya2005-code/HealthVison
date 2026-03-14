@@ -1,6 +1,7 @@
 import express from "express";
-import { getAllDoctors, getDoctorById, getDoctorProfile, updateDoctorProfile } from "../controllers/doctor.controller.js";
+import { getAllDoctors, getDoctorById, getDoctorProfile, updateDoctorProfile, getPendingDoctors, approveDoctor, adminCreateDoctor } from "../controllers/doctor.controller.js";
 import { VerifyJWT } from "../middleware/user.middleware.js";
+import { authorize } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -86,5 +87,10 @@ router.put("/me", VerifyJWT, updateDoctorProfile);
  *         description: Doctor not found
  */
 router.get("/:id", getDoctorById);
+
+// Admin Routes
+router.get("/admin/pending", VerifyJWT, authorize('admin'), getPendingDoctors);
+router.put("/admin/approve/:id", VerifyJWT, authorize('admin'), approveDoctor);
+router.post("/admin/create", VerifyJWT, authorize('admin'), adminCreateDoctor);
 
 export default router;

@@ -100,6 +100,7 @@ export const registerUser = async (req, res, next) => {
       token,
       user: {
         id: user._id,
+        isApproved: role === 'doctor' ? false : true,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -210,6 +211,7 @@ export const loginUser = async (req, res, next) => {
       user: {
         id: user._id,
         doctorId: doctorProfile?._id,
+        isApproved: user.role === 'doctor' ? doctorProfile?.isApproved : true,
         name: user.name,
         email: user.email,
         role: user.role,
