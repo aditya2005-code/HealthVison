@@ -6,8 +6,11 @@ export const setupSocket = (server) => {
         cors: {
             origin: [
                 process.env.FRONTEND_URL,
-                "https://localhost:5173"
-            ].filter(Boolean),
+                "https://www.healthviz.in",
+                "https://healthviz.in",
+                "https://health-vison.vercel.app",
+                "http://localhost:5173"
+            ].filter(Boolean).map(url => url.replace(/\/$/, "")),
             methods: ["GET", "POST"],
             credentials: true
         }
