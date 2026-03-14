@@ -5,16 +5,18 @@ import authService from '../services/auth.service';
 export default function Sidebar({ isOpen, setIsOpen }) {
     const userRole = authService.getCurrentUser()?.role;
 
-    const navItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        ...(userRole !== 'doctor' ? [
-            { path: '/doctors', label: 'Find Doctors', icon: Users },
-            { path: '/reports', label: 'Reports', icon: FileText },
-            { path: '/payment/history', label: 'Payment History', icon: CreditCard },
-            { path: '/chat', label: 'Symptom Chat', icon: MessageSquare },
-        ] : []),
-        { path: '/appointments', label: userRole === 'doctor' ? 'Assigned' : 'Appointments', icon: Calendar },
-    ];
+    const navItems = userRole === 'admin' 
+        ? [{ path: '/dashboard', label: 'Admin Dashboard', icon: LayoutDashboard }]
+        : [
+            { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            ...(userRole !== 'doctor' ? [
+                { path: '/doctors', label: 'Find Doctors', icon: Users },
+                { path: '/reports', label: 'Reports', icon: FileText },
+                { path: '/payment/history', label: 'Payment History', icon: CreditCard },
+                { path: '/chat', label: 'Symptom Chat', icon: MessageSquare },
+            ] : []),
+            { path: '/appointments', label: userRole === 'doctor' ? 'Assigned' : 'Appointments', icon: Calendar },
+        ];
 
     const toggleClass = isOpen ? 'translate-x-0' : '-translate-x-full';
     const widthClass = isOpen ? 'w-64' : 'w-0';

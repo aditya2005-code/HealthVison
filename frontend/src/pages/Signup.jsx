@@ -92,8 +92,16 @@ const Signup = () => {
         setIsLoading(true);
         setApiError('');
         try {
-            await authService.verifyOtp(otp);
-            navigate('/');
+            const response = await authService.verifyOtp(otp);
+            const user = authService.getCurrentUser();
+            
+            if (user?.role === 'doctor') {
+                toast.success("Email verified! Your doctor profile is now pending admin approval. We'll notify you once it's active.", { duration: 6000 });
+                navigate('/dashboard');
+            } else {
+                toast.success("Account verified successfully!");
+                navigate('/');
+            }
         } catch (err) {
             setApiError(err.message || 'Invalid or expired OTP. Please try again.');
         } finally {

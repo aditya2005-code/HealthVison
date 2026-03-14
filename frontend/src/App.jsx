@@ -11,6 +11,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminRoute from './components/AdminRoute';
 import PublicLayout from './layouts/PublicLayout';
 import DoctorsList from './pages/Doctors/DoctorsList';
 import DoctorDetail from './pages/Doctors/DoctorDetail';
@@ -31,6 +33,7 @@ import About from './components/homepage/About.jsx';
 
 const DashboardWrapper = () => {
   const user = authService.getCurrentUser();
+  if (user?.role === 'admin') return <AdminDashboard />;
   return user?.role === 'doctor' ? <DoctorDashboard /> : <Dashboard />;
 };
 
@@ -70,6 +73,12 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="doctor/profile" element={<DoctorProfile />} />
             <Route path="consultation/:roomId" element={<VideoConsultation />} />
+            
+            {/* Admin Specific Routes */}
+            <Route element={<AdminRoute />}>
+              <Route path="admin/dashboard" element={<AdminDashboard />} />
+            </Route>
+
             <Route path="*" element={<div className="p-4">404 Not Found</div>} />
           </Route>
         </Route>
