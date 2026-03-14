@@ -27,6 +27,7 @@ import VideoConsultation from './pages/VideoConsultation';
 import authService from './services/auth.service';
 import PublicRoute from './components/PublicRoute';
 import Home from './components/homepage/Home.jsx';
+import About from './components/homepage/About.jsx';
 
 const DashboardWrapper = () => {
   const user = authService.getCurrentUser();
@@ -40,13 +41,14 @@ function App() {
       <Routes>
         {/* Public Routes (Redirect to Dashboard if logged in) */}
         <Route element={<PublicRoute />}>
-            <Route element={<AuthLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
-            </Route>
-            <Route path="/" element={<Home />} />
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+          </Route>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
         </Route>
 
         <Route element={<PublicLayout />}>

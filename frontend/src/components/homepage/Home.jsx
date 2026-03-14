@@ -942,7 +942,7 @@ const Footer = () => {
               <ul className="space-y-2.5">
                 {links.map((l) => (
                   <li key={l}>
-                    <a href="#" className="text-xs hover:text-white transition-colors">
+                    <a href="/about" className="text-xs hover:text-white transition-colors">
                       {l}
                     </a>
                   </li>
