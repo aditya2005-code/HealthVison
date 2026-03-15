@@ -645,7 +645,7 @@ const steps = [
 const HowItWorksSection = () => {
   const navigate = useNavigate();
   return (
-    <Section className="py-28 px-6 bg-white">
+    <Section id="how-it-works" className="py-28 px-6 bg-white">
       <div className="max-w-5xl mx-auto">
         {/* Heading */}
         <div className="text-center mb-20">
@@ -667,7 +667,7 @@ const HowItWorksSection = () => {
         </div>
 
         {/* Steps */}
-        <div id="how-it-works" className="relative scroll-mt-24">
+        <div className="relative">
           {/* Connector line (desktop) */}
           <div className="hidden md:block absolute top-10 left-[calc(16.67%+2rem)] right-[calc(16.67%+2rem)] h-px bg-gradient-to-r from-cyan-200 via-indigo-200 to-emerald-200" />
 
@@ -893,11 +893,11 @@ const CTASection = () => {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 const Footer = () => {
   return (
-    <footer className="bg-[#071220] text-white/40 py-8 px-6">
+    <footer className="bg-[#071220] text-white/20 py-4 px-6 border-t border-white/5">
       <div className="max-w-6xl mx-auto">
         {/* Row: Copyright & Socials */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <h2 className="text-m">
+          <h2 className="text-xs tracking-wider">
             © {new Date().getFullYear()} HealthVision Inc. All rights reserved.
           </h2>
 
@@ -913,7 +913,7 @@ const Footer = () => {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:border-cyan-400/40 hover:text-cyan-400 transition-all duration-300"
+                className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/20 hover:border-cyan-400/40 hover:text-cyan-400 transition-all duration-300"
               >
                 {social.icon}
               </a>

@@ -280,12 +280,12 @@ const DeveloperCard = ({ member, index }) => {
                 {/* Social links */}
                 <div className="flex items-center gap-4 mt-5">
                     {[
-                        { icon: Github, href: member.github, label: "GitHub" },
-                        { icon: Linkedin, href: member.linkedin, label: "LinkedIn" },
-                        { icon: Mail, href: member.email, label: "Email" },
-                    ].map(({ icon: Icon, href, label }) => (
+                        { icon: Github, href: member.github, label: "GitHub", target: "_blank" },
+                        { icon: Linkedin, href: member.linkedin, label: "LinkedIn", target: "_blank" },
+                        { icon: Mail, href: `mailto:${member.email}`, label: "Email", target: "_self" },
+                    ].map(({ icon: Icon, href, label, target }) => (
                         <a key={label} href={href} aria-label={label}
-                            target="_blank" rel="noopener noreferrer"
+                            target={target} rel="noopener noreferrer"
                             className="text-text-muted hover:text-teal-600 transition-colors duration-200"
                             style={{ color: "var(--text-muted)" }}>
                             <Icon size={18} />
@@ -548,9 +548,9 @@ const CTASection = () => (
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 const Footer = () => (
-    <footer className="py-8 md:py-10 px-4 md:px-8 text-center" style={{ background: "var(--text-dark)" }}>
-        <div className="w-full flex flex-col items-center justify-center gap-4">
-            <p className="text-lg" style={{ color: "rgba(255,255,255,0.35)" }}>
+    <footer className="py-4 px-6 text-center border-t border-black/5" style={{ background: "var(--text-dark)" }}>
+        <div className="w-full flex flex-col items-center justify-center">
+            <p className="text-xs tracking-wider" style={{ color: "rgba(255,255,255,0.25)" }}>
                 © {new Date().getFullYear()} HealthVision Inc. All rights reserved.
             </p>
         </div>
@@ -559,6 +559,10 @@ const Footer = () => (
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function About() {
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <>
             <GlobalStyles />
