@@ -1,9 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Calendar, Home, ArrowRight } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { CheckCircle, Calendar, Home, ArrowRight, AlertCircle } from 'lucide-react';
 
 const PaymentSuccess = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    React.useEffect(() => {
+        if (!location.state?.fromPayment) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [location.state, navigate]);
+
+    if (!location.state?.fromPayment) {
+        return null; // Or a loading spinner while redirecting
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-6 animate-in fade-in zoom-in duration-500">

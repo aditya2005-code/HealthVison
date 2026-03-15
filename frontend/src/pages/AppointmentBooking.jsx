@@ -76,7 +76,7 @@ const AppointmentBooking = () => {
                 toast.loading('Processing wallet payment...', { id: 'wallet-payment' });
                 await paymentService.walletPayment(fee, appointmentId);
                 toast.success('Payment successful & Appointment confirmed!', { id: 'wallet-payment' });
-                navigate('/payment/success');
+                navigate('/payment/success', { state: { fromPayment: true }, replace: true });
                 return;
             }
 
@@ -133,7 +133,7 @@ const AppointmentBooking = () => {
                             razorpay_signature: response.razorpay_signature
                         });
                         toast.success('Payment successful & Appointment confirmed!', { id: 'payment-verify' });
-                        navigate('/payment/success');
+                        navigate('/payment/success', { state: { fromPayment: true }, replace: true });
                     } catch (error) {
                         toast.error(error.response?.data?.message || 'Payment verification failed', { id: 'payment-verify' });
                         navigate('/payment/failure');
