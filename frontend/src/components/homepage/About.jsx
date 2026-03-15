@@ -413,13 +413,13 @@ const HeroSection = () => {
                         ))}
                     </nav>
                     <a href="/"
-                        className="flex items-center gap-2 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.15em] px-4 md:px-6 py-2 rounded-full transition-all duration-300 border hover:scale-105 active:scale-95"
-                        style={{ 
-                            borderColor: "rgba(15,113,115,0.2)", 
+                        className="flex items-center gap-2 text-[12px] md:text-[13px] font-bold uppercase tracking-[0.15em] px-8 md:px-14 py-4 md:py-6 rounded-full transition-all duration-300 border hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        style={{
+                            borderColor: "rgba(15,113,115,0.2)",
                             background: "rgba(15,113,115,0.03)",
-                            color: "var(--teal)" 
+                            color: "var(--teal)"
                         }}>
-                        Back to Home <ArrowRight size={14} strokeWidth={3} />
+                        Back to Home <ArrowRight size={16} strokeWidth={3} />
                     </a>
                 </div>
             </header>
@@ -445,12 +445,12 @@ const HeroSection = () => {
 
                 <motion.div variants={fadeUp} className="mt-10 flex flex-col sm:flex-row gap-4 items-center">
                     <a href="#team"
-                        className="flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-sm transition-all duration-200"
+                        className="flex items-center gap-2 px-12 md:px-16 py-5 md:py-7 rounded-full font-bold text-base md:text-lg transition-all duration-200 shadow-xl hover:shadow-teal-900/10 active:scale-95"
                         style={{
                             background: "var(--cream)", color: "var(--text-dark)",
                             border: "1px solid rgba(15,113,115,0.15)"
                         }}>
-                        <Users size={16} /> Meet the Team
+                        <Users size={20} /> Meet the Team
                     </a>
                 </motion.div>
             </motion.div>
@@ -550,7 +550,7 @@ const CTASection = () => (
 const Footer = () => (
     <footer className="py-8 md:py-10 px-4 md:px-8 text-center" style={{ background: "var(--text-dark)" }}>
         <div className="w-full flex flex-col items-center justify-center gap-4">
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-lg" style={{ color: "rgba(255,255,255,0.35)" }}>
                 © {new Date().getFullYear()} HealthVision Inc. All rights reserved.
             </p>
         </div>

@@ -35,7 +35,7 @@ import {
   X,
   Play,
 } from "lucide-react";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 // Injected as a <style> tag so Tailwind arbitrary values stay clean.
@@ -179,11 +179,13 @@ const Navbar = () => {
   const bg = useTransform(scrollY, [0, 80], ["rgba(255,255,255,0)", "rgba(255,255,255,1)"]);
   const blur = useTransform(scrollY, [0, 80], ["blur(0px)", "blur(16px)"]);
   const shadow = useTransform(scrollY, [0, 80], ["0 0 0 rgba(0,0,0,0)", "0 2px 16px rgba(11,29,58,0.08)"]);
+  const buttonColor = useTransform(scrollY, [0, 80], ["rgba(255,255,255,0.9)", "rgba(11,29,58,0.7)"]);
+  const buttonHoverColor = useTransform(scrollY, [0, 80], ["#FFF", "#0B1D3A"]);
 
   const links = [
     { label: "Features", anchor: "#features" },
     { label: "How It Works", anchor: "#how-it-works" },
-    { label: "Doctors", to: "/doctors" },
+    { label: "About Us", to: "/about" },
   ];
 
   return (
@@ -253,12 +255,14 @@ const Navbar = () => {
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden text-[#0B1D3A]/70 hover:text-[#0B1D3A]"
+        <motion.button
+          style={{ color: buttonColor }}
+          className="md:hidden transition-colors"
           onClick={() => setOpen(!open)}
+          whileHover={{ color: buttonHoverColor }}
         >
           {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        </motion.button>
       </div>
 
       {/* Mobile menu */}
@@ -735,8 +739,8 @@ const testimonials = [
     stars: 5,
   },
   {
-    name: "Dr. Udit Maheswari",
-    role: "Dentist",
+    name: "Dr. Udai Srivastava",
+    role: "General Physician",
     text: "The appointment and video call flow is clean and reliable. Patients show up prepared, which makes consultations more productive. A solid tool for remote follow-ups.",
     stars: 5,
   },
@@ -888,76 +892,33 @@ const CTASection = () => {
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 const Footer = () => {
-  const cols = {
-    Company: ["About Us"],
-  };
-
   return (
-    <footer className="bg-[#071220] text-white/40 pt-16 pb-8 px-6">
+    <footer className="bg-[#071220] text-white/40 py-8 px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 pb-12 border-b border-white/8">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <img
-                src="/logo.png"
-                alt="HealthVision Logo"
-                className="h-8 w-auto object-contain"
-              />
-              <img
-                src="/logo-text.png"
-                alt="HealthVision"
-                className="h-6 w-auto object-contain brightness-0 invert"
-              />
-            </div>
-            <p className="text-xs leading-relaxed text-white/30 mb-4">
-              Intelligent healthcare for everyone. Powered by AI, trusted by thousands.
-            </p>
-            <div className="flex gap-3">
-              {[
-                { icon: <FaGithub size={16} />, href: "https://github.com/aditya2005-code/HealthVison" },
-                { icon: "in", href: "https://www.linkedin.com/in/rishi-tiwari023" },
-                { icon: "in", href: "https://www.linkedin.com/in/akhilpandey9/" },
-                { icon: "in", href: "www.linkedin.com/in/adityapratapsingh84" },
-              ].map((social, idx) => (
-                <a
-                  key={idx}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-xs hover:border-cyan-400/40 hover:text-white transition-colors"
-                >
-                  {social.icon}
-                </a>
-              ))}
-            </div>
+        {/* Row: Copyright & Socials */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <h2 className="text-m">
+            © {new Date().getFullYear()} HealthVision Inc. All rights reserved.
+          </h2>
+
+          <div className="flex items-center gap-3">
+            {[
+              { icon: <FaGithub size={18} />, href: "https://github.com/aditya2005-code/HealthVison" },
+              { icon: <FaLinkedin size={18} />, href: "https://www.linkedin.com/in/rishi-tiwari023" },
+              { icon: <FaLinkedin size={18} />, href: "https://www.linkedin.com/in/akhilpandey9/" },
+              { icon: <FaLinkedin size={18} />, href: "https://www.linkedin.com/in/adityapratapsingh84" },
+            ].map((social, idx) => (
+              <a
+                key={idx}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:border-cyan-400/40 hover:text-cyan-400 transition-all duration-300"
+              >
+                {social.icon}
+              </a>
+            ))}
           </div>
-
-          {/* Link columns */}
-          {Object.entries(cols).map(([heading, links]) => (
-            <div key={heading}>
-              <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-4">
-                {heading}
-              </p>
-              <ul className="space-y-2.5">
-                {links.map((l) => (
-                  <li key={l}>
-                    <a href="/about" className="text-xs hover:text-white transition-colors">
-                      {l}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <p>© {new Date().getFullYear()} HealthVision Inc. All rights reserved.</p>
-          <p className="flex items-center gap-1.5">
-            Made with <HeartPulse size={12} className="text-cyan-400" /> for better healthcare.
-          </p>
         </div>
       </div>
     </footer>
