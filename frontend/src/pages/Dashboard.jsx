@@ -165,7 +165,7 @@ export default function Dashboard() {
 
     // Map appointments for display, filtering for upcoming ones and sorting chronologically
     const formattedAppointments = appointments
-        .filter(apt => ['Scheduled', 'Confirmed', 'Pending'].includes(apt.status))
+        .filter(apt => ['Scheduled', 'Confirmed'].includes(apt.status))
         .sort((a, b) => {
             const dateA = new Date(a.date);
             const dateB = new Date(b.date);

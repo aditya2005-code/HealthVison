@@ -49,7 +49,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
         doctorId,
         date,
         time,
-        status: "Scheduled",
+        status: "Pending",
         paymentStatus: "Pending"
     });
 

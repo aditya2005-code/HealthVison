@@ -7,6 +7,8 @@ export const getStats = async (req, res) => {
         const role = user.role;
 
         let isApproved = true;
+        let matchQuery = { userId: user._id };
+
         if (role === 'doctor') {
             const { Doctor } = await import("../models/doctor.model.js");
             const doctor = await Doctor.findOne({ userId: user._id });
@@ -19,7 +21,12 @@ export const getStats = async (req, res) => {
         const [appointmentStats, reportCount, consultationCount] = await Promise.all([
             // Aggregate appointments stats
             Appointment.aggregate([
-                { $match: matchQuery },
+                { 
+                    $match: { 
+                        ...matchQuery, 
+                        status: { $in: ["Scheduled", "Completed"] } 
+                    } 
+                },
                 {
                     $group: {
                         _id: null,

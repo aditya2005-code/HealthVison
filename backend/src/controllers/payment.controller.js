@@ -137,6 +137,7 @@ export const createPayment = async (req, res) => {
             user.walletBalance -= walletAmount;
             await user.save();
             appointment.paymentStatus = "Paid";
+            appointment.status = "Scheduled";
             await appointment.save();
             await Timeslot.findOneAndUpdate(
                 { doctorId: appointment.doctorId, date: appointment.date, time: appointment.time },
@@ -185,7 +186,10 @@ export const verifyPayment = async (req, res) => {
                 }
             }
 
-            const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+            const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { 
+                paymentStatus: "Paid",
+                status: "Scheduled"
+            });
             if (appointment) {
                 // Update the Timeslot to Booked
                 await Timeslot.findOneAndUpdate(
@@ -334,7 +338,10 @@ export const webhookController = async (req, res) => {
             );
 
             if (payment) {
-                const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { paymentStatus: "Paid" });
+                const appointment = await Appointment.findByIdAndUpdate(payment.appointmentId, { 
+                    paymentStatus: "Paid",
+                    status: "Scheduled"
+                });
                 if (appointment) {
                     // Update the Timeslot to Booked
                     await Timeslot.findOneAndUpdate(

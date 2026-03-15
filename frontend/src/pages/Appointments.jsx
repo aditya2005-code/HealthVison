@@ -127,11 +127,12 @@ const Appointments = () => {
     };
 
     const filteredAppointments = useMemo(() => {
-        if (filter === 'All') return appointments;
-        if (filter === 'Upcoming') return appointments.filter(a => a.status === 'Scheduled');
-        if (filter === 'Past') return appointments.filter(a => a.status === 'Completed');
-        if (filter === 'Cancelled') return appointments.filter(a => a.status === 'Cancelled');
-        return appointments;
+        const validAppointments = appointments.filter(a => a.status !== 'Pending');
+        if (filter === 'All') return validAppointments;
+        if (filter === 'Upcoming') return validAppointments.filter(a => ['Scheduled', 'Confirmed'].includes(a.status));
+        if (filter === 'Past') return validAppointments.filter(a => a.status === 'Completed');
+        if (filter === 'Cancelled') return validAppointments.filter(a => a.status === 'Cancelled');
+        return validAppointments;
     }, [appointments, filter]);
 
     const getStatusStyles = (status) => {
