@@ -6,6 +6,7 @@ import doctorService from '../../services/doctor.service';
 import authService from '../../services/auth.service';
 import Avatar from '../../components/ui/Avatar';
 import CropModal from '../../components/ui/CropModal';
+import CustomDatePicker from '../../components/ui/CustomDatePicker';
 import toast from 'react-hot-toast';
 
 export default function DoctorProfile() {
@@ -310,7 +311,11 @@ export default function DoctorProfile() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                                <input id="dateOfBirth" type="date" value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ''} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                <CustomDatePicker 
+                                    id="dateOfBirth" 
+                                    value={formData.dateOfBirth} 
+                                    onChange={handleChange} 
+                                />
                             </div>
                         </div>
                     </div>
