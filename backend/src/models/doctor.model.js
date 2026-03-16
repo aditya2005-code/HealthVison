@@ -75,6 +75,13 @@ const doctorSchema = new mongoose.Schema(
             default: false,
             index: true
         },
+        isReal: {
+            type: Boolean,
+            default: false,
+            // false = demo(test) doctor
+            // true = real verified doctor
+            index: true
+        },
     },
     {
         timestamps: true,

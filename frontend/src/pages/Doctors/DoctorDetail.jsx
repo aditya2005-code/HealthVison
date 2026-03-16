@@ -104,6 +104,15 @@ export default function DoctorDetail() {
                                             </div>
                                             <span className="text-gray-400">|</span>
                                             <span className="text-gray-600 text-sm">{doctor.experience} years experience</span>
+                                            {doctor.isReal ? (
+                                                <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full border border-green-200 flex items-center gap-1">
+                                                    <span>✓</span> Verified Doctor
+                                                </span>
+                                            ) : (
+                                                <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full border border-amber-200 flex items-center gap-1">
+                                                    <span>🧪</span> Demo Profile
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="hidden md:block text-right">
@@ -113,10 +122,6 @@ export default function DoctorDetail() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 mb-4">
-                                    {/* Backend Data */}
-                                    <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm flex items-center">
-                                        <ShieldCheck className="w-3 h-3 mr-1" /> Verified
-                                    </span>
                                     {doctor.languages && doctor.languages.map(lang => (
                                         <span key={lang} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
                                             {lang}

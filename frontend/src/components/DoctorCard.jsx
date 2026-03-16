@@ -6,7 +6,7 @@ import authService from '../services/auth.service';
 
 export default function DoctorCard({ doctor }) {
     const navigate = useNavigate();
-    
+
     const handleViewProfile = () => {
         const user = authService.getCurrentUser();
         if (!user) {
@@ -39,9 +39,20 @@ export default function DoctorCard({ doctor }) {
                             {/* Optional: Show qualification if needed but might clutter card */}
                         </div>
                     </div>
-                    <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-yellow-700 text-xs font-bold">
-                        <Star className="w-3 h-3 mr-1 fill-current" />
-                        {doctor.rating}
+                    <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-yellow-700 text-xs font-bold">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            {doctor.rating}
+                        </div>
+                        {doctor.isReal ? (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full border border-green-200">
+                                ✓ Verified
+                            </span>
+                        ) : (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded-full border border-amber-200">
+                                Demo
+                            </span>
+                        )}
                     </div>
                 </div>
 
