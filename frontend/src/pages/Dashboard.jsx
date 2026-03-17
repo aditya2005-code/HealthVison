@@ -175,7 +175,9 @@ export default function Dashboard() {
         .map(apt => ({
             id: apt._id,
             doctorName: apt.doctorId?.name ? (typeof apt.doctorId.name === 'string' ? apt.doctorId.name : `${apt.doctorId.name.first} ${apt.doctorId.name.last}`) : 'Unknown Doctor',
-            doctorAvatar: apt.doctorId?.avatarUrl,
+            doctorAvatar: apt.doctorId?.avatarUrl || apt.doctorId?.userId?.avatarUrl || apt.doctorId?.image || apt.doctorId?.userId?.image,
+            patientName: apt.userId?.name ? `${apt.userId.name.first} ${apt.userId.name.last}` : 'Patient',
+            patientAvatar: apt.userId?.avatarUrl || apt.userId?.image,
             specialization: apt.doctorId?.specialization || 'General',
             date: new Date(apt.date).toLocaleDateString(),
             time: apt.time,

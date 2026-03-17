@@ -37,7 +37,7 @@ const AppointmentDetailsModal = ({ isOpen, onClose, appointment, isDoctor }) => 
                         {/* Profile Section */}
                         <div className="flex items-center gap-5 p-5 bg-gray-50 rounded-3xl border border-gray-100">
                             <Avatar
-                                src={person?.avatarUrl || person?.image}
+                                src={person?.avatarUrl || person?.image || person?.userId?.avatarUrl || person?.userId?.image}
                                 alt={personName}
                                 className="w-16 h-16 border-2 border-white shadow-sm"
                             />

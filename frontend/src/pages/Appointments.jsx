@@ -180,7 +180,7 @@ const Appointments = () => {
         <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 font-primary tracking-tight">My Appointments</h1>
+                    <h1 className="text-3xl font-extrabold text-gray-900 font-primary tracking-tight">My Appointment History</h1>
                     <p className="text-gray-500 mt-1">Manage and track your healthcare consultations</p>
                 </div>
 
@@ -253,7 +253,7 @@ const Appointments = () => {
                                 <div className="flex items-center gap-5 z-10">
                                     <div className="relative">
                                         <Avatar
-                                            src={isDoctor ? apt.userId?.image : apt.doctorId?.image}
+                                            src={isDoctor ? (apt.userId?.avatarUrl || apt.userId?.image) : (apt.doctorId?.avatarUrl || apt.doctorId?.image || apt.doctorId?.userId?.avatarUrl || apt.doctorId?.userId?.image)}
                                             alt={isDoctor ? "Patient" : "Doctor"}
                                             className="w-14 h-14 border border-white"
                                             iconSize="w-7 h-7"

@@ -68,8 +68,8 @@ export const getAppointments = asyncHandler(async (req, res) => {
     }
 
     const appointments = await Appointment.find(query)
-        .populate("userId", "name email")
-        .populate("doctorId", "name specialization location image");
+        .populate("userId", "name email avatarUrl")
+        .populate("doctorId", "name specialization location avatarUrl userId");
 
     // Auto-update past appointments to "Completed"
     const now = new Date();
@@ -94,8 +94,8 @@ export const getAppointmentById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const appointment = await Appointment.findById(id)
-        .populate("userId", "name email")
-        .populate("doctorId", "name specialization location image");
+        .populate("userId", "name email avatarUrl")
+        .populate("doctorId", "name specialization location avatarUrl userId");
 
     if (!appointment) {
         throw new ApiError(404, "Appointment not found");

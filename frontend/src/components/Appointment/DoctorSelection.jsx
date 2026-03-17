@@ -72,7 +72,7 @@ const DoctorSelection = ({ onSelect, selectedDoctorId }) => {
                 >
                     <div className="flex items-start gap-4">
                         <Avatar
-                            src={doctor.image}
+                            src={doctor.avatarUrl || doctor.image || doctor.userId?.avatarUrl || doctor.userId?.image}
                             alt={doctor.name}
                             className="w-16 h-16"
                             iconSize="w-8 h-8"

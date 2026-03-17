@@ -42,6 +42,9 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-right" containerStyle={{ zIndex: 999999 }} />
       <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+
         {/* Public Routes (Redirect to Dashboard if logged in) */}
         <Route element={<PublicRoute />}>
           <Route element={<AuthLayout />}>
@@ -50,8 +53,6 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
         </Route>
 
         <Route element={<PublicLayout />}>

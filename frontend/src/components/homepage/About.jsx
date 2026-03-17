@@ -11,6 +11,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
     Github, Linkedin, Shield, Brain, HeartHandshake, Microscope,
@@ -399,10 +400,10 @@ const HeroSection = () => {
                 boxShadow: scrolled ? "0 1px 20px rgba(15,113,115,0.08)" : "none",
             }}>
                 <div className="w-full px-4 md:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
+                    <Link to="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
                         <img src="/logo.png" alt="HealthVision Logo" className="w-9 h-9 object-contain" />
                         <img src="/logo-text.png" alt="HealthVision" className="h-6 w-auto object-contain mt-0.5" />
-                    </div>
+                    </Link>
                     <nav className="flex items-center gap-4 md:gap-8">
                         {["Team"].map((l) => (
                             <a key={l} href={`#${l.toLowerCase()}`}

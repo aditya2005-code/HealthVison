@@ -78,9 +78,9 @@ export default function DoctorDetail() {
                 <div className="md:col-span-2 space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                         <div className="flex flex-col md:flex-row gap-6 items-start">
-                            {doctor.avatarUrl ? (
+                            {(doctor.avatarUrl || doctor.image) ? (
                                 <img
-                                    src={doctor.avatarUrl}
+                                    src={doctor.avatarUrl || doctor.image}
                                     alt={doctor.name}
                                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover flex-shrink-0 shadow-sm border border-gray-100"
                                 />

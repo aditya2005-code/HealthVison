@@ -136,7 +136,7 @@ const AppointmentBooking = () => {
                         navigate('/payment/success', { state: { fromPayment: true }, replace: true });
                     } catch (error) {
                         toast.error(error.response?.data?.message || 'Payment verification failed', { id: 'payment-verify' });
-                        navigate('/payment/failure');
+                        navigate('/payment/failure', { state: { fromPayment: true } });
                     }
                 },
                 prefill: {
@@ -163,7 +163,7 @@ const AppointmentBooking = () => {
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function (response) {
                 toast.error(`Payment Failed: ${response.error.description || 'An error occurred'}`);
-                navigate('/payment/failure');
+                navigate('/payment/failure', { state: { fromPayment: true } });
             });
             rzp.open();
 

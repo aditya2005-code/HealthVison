@@ -22,9 +22,9 @@ export default function DoctorCard({ doctor }) {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-4">
-                        {doctor.avatarUrl ? (
+                        {(doctor.avatarUrl || doctor.image) ? (
                             <img
-                                src={doctor.avatarUrl}
+                                src={doctor.avatarUrl || doctor.image}
                                 alt={doctor.name}
                                 className="w-16 h-16 rounded-full object-cover"
                             />

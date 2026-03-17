@@ -27,7 +27,7 @@ const BookingConfirmation = ({ doctor, date, time, onConfirm, loading, walletBal
                     <div className="flex-1 w-full bg-blue-50/50 p-6 rounded-xl border border-blue-100">
                         <div className="flex items-center gap-4 mb-4">
                             <Avatar
-                                src={doctor.image}
+                                src={doctor.avatarUrl || doctor.image}
                                 alt={doctor.name}
                                 className="w-16 h-16 border-2 border-white shadow-sm"
                                 iconSize="w-8 h-8"
