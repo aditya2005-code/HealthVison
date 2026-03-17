@@ -187,13 +187,13 @@ const SectionLabel = ({ children }) => (
 const teamMembers = [
     {
         name: "Akhil Pandey",
-        role: "Backend Developer & UI (Home/About)",
+        role: "Backend Developer & ML",
         avatar: "AP",
         avatarBg: "#52796F",
         image: "/Akhil.jpeg",
-        bio: "Specialized in backend architecture and crafting the premium UI for Home and About pages.",
-        detail: "Focused on bridging robust backend logic with high-end, responsive frontend experiences.",
-        skills: ["Express Js", "React JS", "Tailwind CSS", "Framer Motion"],
+        bio: "Specialized in backend development and Machine Learning.",
+        detail: "Focused on bridging robust backend logic with chatbot services.",
+        skills: ["Express Js", "Node Js", "WebRTC","Razorpay", "MongoDB", "Langchain", "Scikit Learn", "Framer Motion", "Tailwind CSS"],
         github: "https://github.com/akhil9648",
         linkedin: "https://www.linkedin.com/in/akhilpandey9",
         email: "akhilpandey494@gmail.com",
@@ -249,7 +249,7 @@ const DeveloperCard = ({ member, index }) => {
 
             {/* Content area */}
             <div className="flex flex-col items-center -mt-10 px-6 pb-6 pt-1">
-                <div className="w-18 h-18 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white z-10"
+                <div className="w-18 h-13 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white z-10"
                     style={{ background: member.avatarBg }}>
                     {member.avatar}
                 </div>
