@@ -58,12 +58,9 @@ const nosqlSanitizer = (req, res, next) => {
 
 // Middleware
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
   'https://www.healthviz.in',
   'https://healthviz.in',
   'https://health-vison.vercel.app'
-
 ].filter(Boolean).map(url => url.replace(/\/$/, ""));
 
 const corsOptions = {
