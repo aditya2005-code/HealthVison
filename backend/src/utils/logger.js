@@ -18,29 +18,35 @@ const logger = winston.createLogger({
     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
     format: logFormat,
     transports: [
-        new winston.transports.File({
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.printf(({ level, message, timestamp }) => {
+                    return `${timestamp} ${level}: ${message}`;
+                })
+            ),
+        })
+    ],
+    exitOnError: false
+});
+
+// Add file logging only if we are in a local environment where it might be needed
+if (process.env.NODE_ENV !== 'production') {
+    try {
+        logger.add(new winston.transports.File({
             filename: path.join(__dirname, '../../logs/error.log'),
             level: 'error',
             maxsize: 5242880,
             maxFiles: 5
-        }),
-        new winston.transports.File({
+        }));
+        logger.add(new winston.transports.File({
             filename: path.join(__dirname, '../../logs/combined.log'),
             maxsize: 5242880,
             maxFiles: 5
-        }),
-    ],
-});
-
-if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console({
-        format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.printf(({ level, message, timestamp }) => {
-                return `${timestamp} ${level}: ${message}`;
-            })
-        ),
-    }));
+        }));
+    } catch (error) {
+        console.warn('Winston file transports failed to initialize:', error.message);
+    }
 }
 
 export default logger;

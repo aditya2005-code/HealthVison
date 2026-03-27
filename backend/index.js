@@ -1,11 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import http from 'http';
 import swaggerUi from 'swagger-ui-express';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { specs } from './src/config/swagger.js';
-import { errorHandler } from './src/middleware/error.middleware.js';
+import { errorHandler, notFoundHandler } from './src/middleware/error.middleware.js';
 import authRoutes from './src/routes/auth.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import doctorRoutes from './src/routes/doctor.routes.js';
@@ -17,25 +21,19 @@ import paymentRoutes from './src/routes/payment.routes.js';
 import webrtcRoutes from './src/routes/webrtc.routes.js';
 import { webhookController } from './src/controllers/payment.controller.js';
 import { setupSocket } from './src/services/socket.service.js';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import logger from './src/utils/logger.js';
-
-dotenv.config();
 
 const app = express();
 
 // Trust proxy for express-rate-limit behind reverse proxies (e.g. Render)
 app.set('trust proxy', 1);
 
-let server;
-
-server = http.createServer(app);
+const server = http.createServer(app);
 
 // Initialize Socket.io
 setupSocket(server);
 
-// Custom NoSQL Injection Sanitizer (Express 5 compatible)
+// Custom NoSQL Injection Sanitizer
 const nosqlSanitizer = (req, res, next) => {
   const sanitize = (obj) => {
     if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
@@ -56,25 +54,33 @@ const nosqlSanitizer = (req, res, next) => {
   next();
 };
 
-// Middleware
+// CORS configuration - allowing origins including the env current FRONTEND_URL
 const allowedOrigins = [
+  process.env.FRONTEND_URL,
   'https://www.healthviz.in',
   'https://healthviz.in',
   'https://health-vison.vercel.app'
-].filter(Boolean).map(url => url.replace(/\/$/, ""));
+].filter(Boolean).map(url => url.trim().replace(/\/$/, ""));
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl, or cron jobs)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+    
+    const isAllowed = allowedOrigins.includes(origin) || allowedOrigins.includes('*');
+    if (isAllowed) {
       callback(null, true);
     } else {
+      logger.warn(`Blocked by CORS: origin ${origin} not in list: ${allowedOrigins.join(', ')}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
+
+// Global Middleware
 app.use(cors(corsOptions));
 app.use(helmet());
 app.use(nosqlSanitizer);
@@ -86,7 +92,6 @@ morgan.token('browser', (req) => {
   const secChUa = req.headers['sec-ch-ua'] || '';
   const gpc = req.headers['sec-gpc'] || '';
 
-  // Detect browser type
   if (ua.includes('Brave') || secChUa.includes('Brave') || gpc === '1') return 'Brave';
   if (ua.includes('Edg/') || secChUa.includes('Edge')) return 'Edge';
   if (ua.includes('Chrome/') || secChUa.includes('Chrome')) return 'Chrome';
@@ -96,9 +101,9 @@ morgan.token('browser', (req) => {
   return 'Other';
 });
 
-// Logging middleware
 app.use(morgan(':remote-addr :method :url :status :browser', { stream: { write: message => logger.info(message.trim()) } }));
 
+// Ports and Database URIs
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/healthvision';
 
@@ -110,7 +115,7 @@ mongoose.connect(MONGO_URI)
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-// Routes
+// Health-check / Root routes
 app.get('/', (req, res) => {
   res.send('HealthVision API is running');
 });
@@ -119,6 +124,7 @@ app.get('/api', (req, res) => {
   res.json({ message: 'HealthVision API is running and secure', status: 'success' });
 });
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/doctors', doctorRoutes);
@@ -126,21 +132,21 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+
 app.post(
   "/api/payment/webhook",
   express.raw({ type: "application/json" }),
   webhookController
 );
+
 app.use('/api/payment', paymentRoutes);
 app.use('/api/webrtc', webrtcRoutes);
-// 404 Handler - must be after all routes
-import { notFoundHandler } from './src/middleware/error.middleware.js';
-app.use(notFoundHandler);
 
-// Global Error Handler
+// Error Handling
+app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Server
+// Listen
 server.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 });
